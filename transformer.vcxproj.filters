@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="include\backend\cuda\cuda_matrix_math.cuh">
+      <Filter>include\backend\cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\decoder.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\decoder_layer.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\embedding.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\encoder.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\encoder_layer.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\feed_forward.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\multi_head_attention.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\positional_encoding.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\layers\transformer.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tensor\tensor.h">
+      <Filter>include\tensor</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tensor\device.h">
+      <Filter>include\tensor</Filter>
+    </ClInclude>
+    <ClInclude Include="include\backend\cpu\cpu_matrix_math.h">
+      <Filter>include\backend\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tensor\tensor_data.h">
+      <Filter>include\tensor</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\cuda_utils.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{accbfafd-ba37-429c-85b9-f2728cedfad1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\backend">
+      <UniqueIdentifier>{197d27f6-a50c-4db6-9130-498e8e3abe6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\backend\cpu">
+      <UniqueIdentifier>{2cb3af53-ac43-4486-83b3-0e6a8ef57e15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\backend\cuda">
+      <UniqueIdentifier>{4ef96bfb-3a8e-4074-a9ef-05a9954ccb27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\layers">
+      <UniqueIdentifier>{dc67904d-d9b2-4b07-91c7-f125b991368d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\tensor">
+      <UniqueIdentifier>{03995139-b30e-4dbd-bfee-78138f6deea1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{6243e716-fa7d-4fdb-9363-b39f9411d707}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\backend">
+      <UniqueIdentifier>{ab5cabb9-45c6-4985-8570-f6ebb75b32df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\backend\cpu">
+      <UniqueIdentifier>{5393e172-90b6-4efb-8ddc-2db7b6d6aeb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\backend\cuda">
+      <UniqueIdentifier>{ec2d7f56-91d9-4393-972b-5c6cb7855bda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\layers">
+      <UniqueIdentifier>{b7712fc0-ab98-4874-b1b0-011859f32565}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tensor">
+      <UniqueIdentifier>{b22e1bea-2c08-42d1-9216-145ce17198dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{11d2dbde-3752-42f7-a6db-bde7f17f76ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{3f3ffb93-340a-4899-94d1-d9e3162b7050}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="test\example.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\decoder.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\decoder_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\embedding.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\encoder.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\encoder_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\feed_forward.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\multi_head_attention.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\positional_encoding.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\transformer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tensor\tensor.cpp">
+      <Filter>src\tensor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tensor\device.cpp">
+      <Filter>src\tensor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\cpu\cpu_matrix_math.cpp">
+      <Filter>src\backend\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tensor\tensor_data.cpp">
+      <Filter>src\tensor</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\cuda_utils.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\backend\cuda\cuda_matrix_math.cu">
+      <Filter>src\backend\cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
