@@ -18,13 +18,17 @@ int main() {
 
 	tfm::Tensor t2 = t1.nonOwningCopy({ 1, 0 });
 
+	// t1 * t2.T
 	tfm::Tensor t3 = t1.multiply(t2, false, true);
 
 	std::cout << t1 << std::endl;
 	std::cout << t2 << std::endl;
 	std::cout << t3 << std::endl;
 
+	#ifndef NO_CUDA
 	checkCudaError(cudaDeviceReset(), "cudaDeviceReset failed!");
+	#endif // !NO_CUDA
 
 	return 0;
 }
+

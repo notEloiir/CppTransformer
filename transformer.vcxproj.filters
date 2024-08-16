@@ -84,17 +84,26 @@
     <Filter Include="src\tensor">
       <UniqueIdentifier>{b22e1bea-2c08-42d1-9216-145ce17198dc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="test">
-      <UniqueIdentifier>{11d2dbde-3752-42f7-a6db-bde7f17f76ee}</UniqueIdentifier>
-    </Filter>
     <Filter Include="utils">
       <UniqueIdentifier>{3f3ffb93-340a-4899-94d1-d9e3162b7050}</UniqueIdentifier>
     </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{685b7360-5a43-4350-862a-e5bccf5d1b3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\backend">
+      <UniqueIdentifier>{853e45c2-6570-450e-ae20-2bbf8f69844e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\backend\cpu">
+      <UniqueIdentifier>{43e466a3-8848-4437-969d-2b0dfddc696b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\backend\cuda">
+      <UniqueIdentifier>{f93cdd09-b10e-440c-9cb7-58d38bf426ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test\tensor">
+      <UniqueIdentifier>{d13b9770-6bfa-4d78-9e4e-83efbb8ac2b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test\example.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
     <ClCompile Include="src\layers\decoder.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
@@ -136,6 +145,13 @@
     </ClCompile>
     <ClCompile Include="utils\cuda_utils.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="example.cpp" />
+    <ClCompile Include="test\tests.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\tensor\tensor_test.cpp">
+      <Filter>test\tensor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

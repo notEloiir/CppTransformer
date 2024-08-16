@@ -1,13 +1,15 @@
 #include <layers/transformer.h>
+#include <filesystem>
 
 
-tfm::Transformer::Transformer(int num_layers, int num_heads, int d_model, int d_ff, int vocab_size, int max_seq_len) :
-	encoder(num_layers, num_heads, d_model, d_ff),
-	decoder(num_layers, num_heads, d_model, d_ff),
-	src_embedding(vocab_size, d_model),
-	tgt_embedding(vocab_size, d_model),
+tfm::Transformer::Transformer(int num_layers, int num_heads, int d_model, int d_ff, int vocab_size, int max_seq_len, std::string model_name="def") :
+	encoder(num_layers, num_heads, d_model, d_ff, (std::filesystem::path("models") / model_name / "encoder").string()),
+	decoder(num_layers, num_heads, d_model, d_ff, (std::filesystem::path("models") / model_name / "decoder").string()),
+	src_embedding(vocab_size, d_model, (std::filesystem::path("models") / model_name / "embedding").string()),
+	tgt_embedding(vocab_size, d_model, (std::filesystem::path("models") / model_name / "embedding").string()),
 	positional_encoding(max_seq_len, d_model),
-	output_() {}
+	output_(),
+	model_name(model_name) {}
 
 
 const tfm::Tensor tfm::Transformer::forward(const std::vector<uint32_t>& src, const std::vector<uint32_t>& tgt) {
@@ -26,4 +28,12 @@ const tfm::Tensor tfm::Transformer::forward(const std::vector<uint32_t>& src, co
 	output_ = std::move(decoder_output);
 
 	return output();
+}
+
+
+void tfm::Transformer::save() const {
+	src_embedding.save();
+	tgt_embedding.save();
+	encoder.save();
+	decoder.save();
 }

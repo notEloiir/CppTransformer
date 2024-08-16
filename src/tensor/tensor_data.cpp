@@ -410,7 +410,7 @@ void tfm::TensorData::moveTo(Device newDevice){
 }
 
 
-void tfm::TensorData::saveToPath(const std::string& path) {
+int tfm::TensorData::saveToPath(const std::string& path) const {
 	std::ofstream file;
 	file.open(path, std::ios::out | std::ios::binary);
 	if (!file.is_open()) {
@@ -419,7 +419,7 @@ void tfm::TensorData::saveToPath(const std::string& path) {
 	}
 
 	Device origDevice = device_;
-	moveTo(Device(tfm::DeviceType::CPU));
+	const_cast<tfm::TensorData *>(this)->moveTo(Device(tfm::DeviceType::CPU));
 
 	for (size_t col = 0; col < cols(); col++) {
 		for (size_t row = 0; row < rows(); row++) {
@@ -437,13 +437,17 @@ void tfm::TensorData::saveToPath(const std::string& path) {
 	}
 
 	file.close();
-	moveTo(origDevice);
+	const_cast<tfm::TensorData*>(this)->moveTo(origDevice);
+	return 0;
 }
 
 
-void tfm::TensorData::loadFromPath(const std::string& path, bool loadWeightsAndBias) {
+int tfm::TensorData::loadFromPath(const std::string& path, bool loadWeightsAndBias) {
 	std::ifstream file;
 	file.open(path, std::ios::in | std::ios::binary);
+	if (!file.good()) {
+		return 1;
+	}
 	if (!file.is_open()) {
 		fprintf(stderr, "file open failed");
 		exit(1);
@@ -484,6 +488,7 @@ void tfm::TensorData::loadFromPath(const std::string& path, bool loadWeightsAndB
 
 	file.close();
 	moveTo(origDevice);
+	return 0;
 }
 
 

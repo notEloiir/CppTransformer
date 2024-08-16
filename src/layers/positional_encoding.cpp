@@ -21,7 +21,6 @@ tfm::PositionalEncoding::PositionalEncoding(size_t max_seq_len, size_t d_model) 
 	}
 }
 
-tfm::Tensor tfm::PositionalEncoding::forward(const tfm::Tensor& token_embeddings)
-{
+tfm::Tensor tfm::PositionalEncoding::forward(const tfm::Tensor& token_embeddings) {
 	return token_embeddings + positional_encoding_matrix;
 }

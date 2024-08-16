@@ -40,8 +40,8 @@ namespace tfm
 		void initBias();
 		// Moving will grant ownership on the new device
 		void moveTo(Device newDevice);
-		void saveToPath(const std::string& path);
-		void loadFromPath(const std::string& path, bool loadWeightsAndBias =false);
+		int saveToPath(const std::string& path) const;
+		int loadFromPath(const std::string& path, bool loadWeightsAndBias =false);
 
 		float* operator[](size_t col) { return colData(col); }
 		const float* operator[](size_t col) const { return colData(col); }

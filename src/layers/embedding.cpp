@@ -6,17 +6,17 @@
 #include <layers/embedding.h>
 
 
-tfm::Embedding::Embedding(size_t vocab_size, size_t d_model) :
+tfm::Embedding::Embedding(size_t vocab_size, size_t d_model, std::string filename) :
 	vocab_size(vocab_size), 
 	d_model(d_model),
 	embedding_matrix(vocab_size, d_model, tfm::Device(tfm::DeviceType::CPU)),
-	output_() {
+	output_(),
+	filename(filename) {
 
-	// TODO:
-	// if file exists
-	// load embedding_matrix from that file
-	// else
-	embedding_matrix.random();
+	if (1 == embedding_matrix.loadFromPath(filename + "embedding_matrix")) {
+		// file doesn't exist, generate random matrix
+		embedding_matrix.random();
+	}
 }
 
 
@@ -34,7 +34,9 @@ const tfm::Tensor tfm::Embedding::forward(const std::vector<uint32_t>& tokens) {
 }
 
 
-
+void tfm::Embedding::save() const {
+	embedding_matrix.saveToPath(filename + "embedding_matrix");
+}
 
 
 

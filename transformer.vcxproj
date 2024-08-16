@@ -109,6 +109,7 @@
     <ClInclude Include="utils\cuda_utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="example.cpp" />
     <ClCompile Include="src\backend\cpu\cpu_matrix_math.cpp" />
     <ClCompile Include="src\layers\decoder.cpp" />
     <ClCompile Include="src\layers\decoder_layer.cpp" />
@@ -122,7 +123,8 @@
     <ClCompile Include="src\tensor\device.cpp" />
     <ClCompile Include="src\tensor\tensor.cpp" />
     <ClCompile Include="src\tensor\tensor_data.cpp" />
-    <ClCompile Include="test\example.cpp" />
+    <ClCompile Include="test\tensor\tensor_test.cpp" />
+    <ClCompile Include="test\tests.cpp" />
     <ClCompile Include="utils\cuda_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
