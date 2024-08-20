@@ -150,11 +150,17 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="example.cpp" />
-    <ClCompile Include="test\tests.cpp">
+    <ClCompile Include="test\run_tests.cpp">
       <Filter>test</Filter>
     </ClCompile>
     <ClCompile Include="test\tensor\tensor_test.cpp">
       <Filter>test\tensor</Filter>
+    </ClCompile>
+    <ClCompile Include="test\backend\cpu\cpu_matrix_math_test.cpp">
+      <Filter>test\backend\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="test\backend\cuda\cuda_matrix_math_test.cpp">
+      <Filter>test\backend\cuda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
