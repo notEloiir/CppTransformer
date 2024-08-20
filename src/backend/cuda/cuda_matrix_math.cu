@@ -76,6 +76,13 @@ tfm::Tensor cudaMatMult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpo
 	size_t m = !transposeA ? A.rows() : A.cols();
 	size_t n = !transposeB ? B.cols() : B.rows();
 	size_t k = !transposeA ? A.cols() : A.rows();
+	size_t k_check = !transposeB ? B.rows() : B.cols();
+
+	if (k != k_check) {
+		char message[128];
+		snprintf(message, 128, "Matrices have incompatible dimensions for multiplication: (%zu, %zu), (%zu, %zu)", k, m, n, k_check);
+		throw std::runtime_error(message);
+	}
 
 	const float alpha = 1.0f;
 	const float beta = 0.0f;
@@ -154,8 +161,7 @@ void cudaNormalizeMatrix(tfm::Tensor& matrix) {
 	size_t cols = matrix.cols();
 	size_t rows = matrix.rows();
 
-	tfm::Device device(tfm::DeviceType::CUDA, 0);
-	matrix.moveTo(device);
+	matrix.moveTo(tfm::Device(tfm::DeviceType::CUDA, 0));
 	
 	// Launch a kernel on the GPU with one thread for each element.
 	dim3 blockSize(16, 16);
@@ -192,8 +198,7 @@ void cudaReLU(tfm::Tensor& matrix) {
 	size_t cols = matrix.cols();
 	size_t rows = matrix.rows();
 
-	tfm::Device device(tfm::DeviceType::CUDA, 0);
-	matrix.moveTo(device);
+	matrix.moveTo(tfm::Device(tfm::DeviceType::CUDA, 0));
 	
 	// Launch a kernel on the GPU with one thread for each element.
 	dim3 blockSize(16, 16);

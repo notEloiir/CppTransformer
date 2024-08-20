@@ -42,8 +42,12 @@ tfm::Tensor tfm::Tensor::nonOwningCopy() const {
 tfm::Tensor tfm::Tensor::nonOwningCopy(const std::vector<size_t>& colIds) const {
 	tfm::Tensor v = nonOwningCopy();
 	v.isDataContinuous_ = false;
+	if (v.cols_ != colIds.size()) {
+		v.cols_ = colIds.size();
+		v.data2D_ = (float**)realloc((void*)v.data2D_, v.cols_ * sizeof(float*));
+	}
 
-	for (size_t col = 0; col < cols(); col++) {
+	for (size_t col = 0; col < v.cols(); col++) {
 		v.data2D_[col] = data2D_[colIds[col]];
 	}
 

@@ -321,7 +321,7 @@ void tfm::TensorData::initBias() {
 		}
 	}
 
-	std::fill(bias_, bias_ + rows_, 1.0f);
+	std::fill(bias_, bias_ + rows_, 0.0f);
 
 	moveTo(origDevice);
 }

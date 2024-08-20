@@ -46,6 +46,9 @@
     <ClInclude Include="utils\cuda_utils.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="utils\compiler_flags.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

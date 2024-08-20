@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <backend/cpu/cpu_matrix_math.h>
+#include <stdexcept>
 
 
 float getElementTransposed(const tfm::Tensor& tensor, size_t col, size_t row, bool transpose) {
@@ -22,7 +23,10 @@ tfm::Tensor cpuMatAdd(const tfm::Tensor& A, const tfm::Tensor& B) {
 		cols = A.cols();
 	}
 
-	tfm::Tensor C(cols, rows, A.device());
+	tfm::Device device(tfm::DeviceType::CPU);
+	const_cast<tfm::Tensor&>(A).moveTo(device);
+	const_cast<tfm::Tensor&>(B).moveTo(device);
+	tfm::Tensor C(cols, rows, device);
 
 	if (B.isVector()) {
 		for (size_t col = 0; col < cols; col++) {
@@ -47,14 +51,24 @@ tfm::Tensor cpuMatMult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpos
 	size_t m = !transposeA ? A.rows() : A.cols();
 	size_t n = !transposeB ? B.cols() : B.rows();
 	size_t k = !transposeA ? A.cols() : A.rows();
+	size_t k_check = !transposeB ? B.rows() : B.cols();
 
-	tfm::Tensor C(n, m, A.device());
+	if (k != k_check) {
+		char message[128];
+		snprintf(message, 128, "Matrices have incompatible dimensions for multiplication: (%zu, %zu), (%zu, %zu)", k, m, n, k_check);
+		throw std::runtime_error(message);
+	}
 
-	for (size_t o = 0; o < m; o++) {
-		for (size_t p = 0; p < n; p++) {
-			C[p][o] = 0;
-			for (size_t r = 0; r < k; r++) {
-				C[p][o] += getElementTransposed(A, r, o, transposeA) * getElementTransposed(B, p, r, transposeB);
+	tfm::Device device(tfm::DeviceType::CPU);
+	const_cast<tfm::Tensor&>(A).moveTo(device);
+	const_cast<tfm::Tensor&>(B).moveTo(device);
+	tfm::Tensor C(n, m, device);
+
+	for (size_t n_i = 0; n_i < n; n_i++) {
+		for (size_t m_i = 0; m_i < m; m_i++) {
+			C[n_i][m_i] = 0.0f;
+			for (size_t k_i = 0; k_i < k; k_i++) {
+				C[n_i][m_i] += getElementTransposed(A, k_i, m_i, transposeA) * getElementTransposed(B, n_i, k_i, transposeB);
 			}
 		}
 	}
@@ -64,7 +78,7 @@ tfm::Tensor cpuMatMult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpos
 
 
 void cpuNormalizeMatrix(tfm::Tensor& matrix) {
-
+	matrix.moveTo(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t row = 0; row < matrix.rows(); row++) {
 		float gamma = matrix.weights()[row];
@@ -85,13 +99,15 @@ void cpuNormalizeMatrix(tfm::Tensor& matrix) {
 		float stddev = sqrtf(var);
 
 		for (size_t col = 0; col < matrix.cols(); col++) {
-			matrix[col][row] = matrix[col][row] - mean / stddev * gamma + beta;
+			matrix[col][row] = (matrix[col][row] - mean) / stddev * gamma + beta;
 		}
 	}
 
 }
 
 void cpuReLU(tfm::Tensor& matrix) {
+	matrix.moveTo(tfm::Device(tfm::DeviceType::CPU));
+
 	for (size_t col = 0; col < matrix.cols(); col++) {
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] = matrix[col][row] > 0 ? matrix[col][row] : 0;

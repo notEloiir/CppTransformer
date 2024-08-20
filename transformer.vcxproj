@@ -106,6 +106,7 @@
     <ClInclude Include="include\tensor\device.h" />
     <ClInclude Include="include\tensor\tensor.h" />
     <ClInclude Include="include\tensor\tensor_data.h" />
+    <ClInclude Include="utils\compiler_flags.h" />
     <ClInclude Include="utils\cuda_utils.h" />
   </ItemGroup>
   <ItemGroup>

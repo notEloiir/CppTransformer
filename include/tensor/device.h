@@ -1,8 +1,5 @@
 #pragma once
-
-
-// uncomment when no CUDA-available device. may still need CUDA toolkit installed, but not CUDA drivers
-#define NO_CUDA
+#include <compiler_flags.h>
 
 
 namespace tfm
