@@ -128,7 +128,7 @@ __global__ void normalizeKernel(float* data, float* weights, float* bias, float*
 	__syncthreads();
 
 	if (row < rows && col == 0) {
-		mean[row] /= rows;
+		mean[row] /= cols;
 	}
 	__syncthreads();
 
@@ -144,7 +144,7 @@ __global__ void normalizeKernel(float* data, float* weights, float* bias, float*
 	__syncthreads();
 
 	if (row < rows && col == 0) {
-		stddev[row] = sqrtf(stddev[row] / rows);
+		stddev[row] = sqrtf(stddev[row] / cols);
 	}
 	__syncthreads();
 
@@ -168,7 +168,7 @@ void cudaNormalizeMatrix(tfm::Tensor& matrix) {
 	dim3 gridSize((rows + blockSize.y - 1) / blockSize.y);
 
 	float* mem = nullptr;
-	checkCudaError(cudaMalloc((void**)mem, 2 * rows * sizeof(float)), "cudaMalloc failed");
+	checkCudaError(cudaMalloc((void**)&mem, 2 * rows * sizeof(float)), "cudaMalloc failed");
 	normalizeKernel<<<gridSize, blockSize>>>(matrix.data(), matrix.weights(), matrix.bias(), mem, cols, rows);
 
 	// Check for any errors launching the kernel
