@@ -77,6 +77,19 @@ tfm::Tensor cpuMatMult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpos
 }
 
 
+tfm::Tensor cpuMatMultBLAS1(const tfm::Tensor& A, float val) {
+	tfm::Tensor res(A.cols(), A.rows(), A.device());
+
+	for (size_t col = 0; col < res.cols(); col++) {
+		for (size_t row = 0; row < res.rows(); row++) {
+			res[col][row] = A[col][row] * val;
+		}
+	}
+
+	return res;
+}
+
+
 void cpuNormalizeMatrix(tfm::Tensor& matrix) {
 	matrix.moveTo(tfm::Device(tfm::DeviceType::CPU));
 
@@ -113,5 +126,29 @@ void cpuReLU(tfm::Tensor& matrix) {
 			matrix[col][row] = matrix[col][row] > 0 ? matrix[col][row] : 0;
 		}
 	}
+}
+
+
+void cpuSoftmax(tfm::Tensor& matrix) {
+	for (size_t col = 0; col < matrix.cols(); col++) {
+		float maxVal = -FLT_MAX;
+		for (size_t row = 0; row < matrix.rows(); row++) {
+			if (maxVal < matrix[col][row]) {
+				maxVal = matrix[col][row];
+			}
+		}
+
+		float sum_exp = 0.0f;
+		for (size_t row = 0; row < matrix.rows(); row++) {
+			matrix[col][row] = std::exp(matrix[col][row] - maxVal);
+			sum_exp += matrix[col][row];
+		}
+
+		for (size_t row = 0; row < matrix.rows(); row++) {
+			matrix[col][row] /= sum_exp;
+		}
+	}
+
+	return;
 }
 

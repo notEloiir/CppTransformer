@@ -109,6 +109,42 @@ tfm::Tensor cudaMatMult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpo
 }
 
 
+__global__ void BLAS1MultKernel(const float* a, float val, float* res, size_t cols, size_t rows) {
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (col < cols && row < rows) {
+		res[col * rows + row] = a[col * rows + row] * val;
+	}
+}
+
+tfm::Tensor cudaMatMultBLAS1(const tfm::Tensor& A, float val) {
+
+	checkCudaError(cudaSetDevice(0), "cudaSetDevice failed");
+
+	size_t cols = A.cols();
+	size_t rows = A.rows();
+
+	const_cast<tfm::Tensor&>(A).moveTo(tfm::Device(tfm::DeviceType::CUDA, 0));
+	tfm::Tensor res(A.cols(), A.rows(), A.device());
+
+	// Launch a kernel on the GPU with one thread for each element.
+	dim3 blockSize(16, 16);
+	dim3 gridSize((cols + blockSize.x - 1) / blockSize.x, (rows + blockSize.y - 1) / blockSize.y);
+
+	BLAS1MultKernel<<<gridSize, blockSize>>>(A.data(), val, res.data(), cols, rows);
+
+	// Check for any errors launching the kernel
+	checkCudaError(cudaGetLastError(), "BLAS1MultKernel launch failed");
+
+	// cudaDeviceSynchronize waits for the kernel to finish, and returns
+	// any errors encountered during the launch.
+	checkCudaError(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");
+	
+	return res;
+}
+
+
 __global__ void normalizeKernel(float* data, float* weights, float* bias, float* allocatedMem, size_t cols, size_t rows) {
 
 	float* mean = allocatedMem;
@@ -155,6 +191,7 @@ __global__ void normalizeKernel(float* data, float* weights, float* bias, float*
 	}
 }
 
+
 void cudaNormalizeMatrix(tfm::Tensor& matrix) {
 	checkCudaError(cudaSetDevice(0), "cudaSetDevice failed");
 
@@ -169,6 +206,7 @@ void cudaNormalizeMatrix(tfm::Tensor& matrix) {
 
 	float* mem = nullptr;
 	checkCudaError(cudaMalloc((void**)&mem, 2 * rows * sizeof(float)), "cudaMalloc failed");
+	checkCudaError(cudaMemset(mem, 0, 2 * rows * sizeof(float)), "cudaMemset failed");
 	normalizeKernel<<<gridSize, blockSize>>>(matrix.data(), matrix.weights(), matrix.bias(), mem, cols, rows);
 
 	// Check for any errors launching the kernel
@@ -177,6 +215,7 @@ void cudaNormalizeMatrix(tfm::Tensor& matrix) {
 	// cudaDeviceSynchronize waits for the kernel to finish, and returns
 	// any errors encountered during the launch.
 	checkCudaError(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");
+	checkCudaError(cudaFree(mem), "cudaFree failed");
 
 	return;
 }
@@ -208,6 +247,51 @@ void cudaReLU(tfm::Tensor& matrix) {
 
 	// Check for any errors launching the kernel
 	checkCudaError(cudaGetLastError(), "ReLUKernel launch failed");
+
+	// cudaDeviceSynchronize waits for the kernel to finish, and returns
+	// any errors encountered during the launch.
+	checkCudaError(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");
+
+	return;
+}
+
+
+__global__ void softmaxKernel(float* data, size_t cols, size_t rows) {
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+	float maxVal = -FLT_MAX;
+	for (size_t row = 0; row < rows; row++) {
+		maxVal = fmaxf(maxVal, data[col * rows + row]);
+	}
+
+	float sumExp = 0.0f;
+	for (size_t row = 0; row < rows; row++) {
+		data[col * rows + row] = expf(data[col * rows + row] - maxVal);
+		sumExp += data[col * rows + row];
+	}
+
+	for (size_t row = 0; row < rows; row++) {
+		data[col * rows + row] /= sumExp;
+	}
+}
+
+
+void cudaSoftmax(tfm::Tensor& matrix) {
+	checkCudaError(cudaSetDevice(0), "cudaSetDevice failed");
+
+	size_t cols = matrix.cols();
+	size_t rows = matrix.rows();
+
+	matrix.moveTo(tfm::Device(tfm::DeviceType::CUDA, 0));
+
+	// Launch a kernel on the GPU with one thread for each element.
+	int blockSize = 16 * 16;
+	int numBlocks = (cols + blockSize - 1) / blockSize;
+
+	softmaxKernel<<<numBlocks, blockSize>>>(matrix.data(), cols, rows);
+
+	// Check for any errors launching the kernel
+	checkCudaError(cudaGetLastError(), "softmaxKernel launch failed");
 
 	// cudaDeviceSynchronize waits for the kernel to finish, and returns
 	// any errors encountered during the launch.
