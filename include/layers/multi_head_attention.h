@@ -18,11 +18,17 @@ public:
 private:
 	size_t num_heads;
 	size_t d_model;
+	size_t d_key;
 	
-
+	tfm::Tensor Wq; // queries weights
+	tfm::Tensor Wk; // keys weights
+	tfm::Tensor Wv; // values weights
+	tfm::Tensor Wo; // output weights
 
 	tfm::Tensor output_;
 	std::string filename;
+
+	tfm::Tensor attention_head(const tfm::Tensor& Q, const tfm::Tensor& K, const tfm::Tensor& V);
 };
 
 }
