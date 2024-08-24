@@ -7,7 +7,7 @@ namespace tfm{
 
 class FeedForward {
 public:
-	FeedForward(int d_model, int d_ff, std::string filename);
+	FeedForward(size_t d_model, size_t d_ff, std::string filename);
 
 	// Method to perform feed-forward computation
 	const tfm::Tensor forward(const tfm::Tensor& input);
@@ -16,8 +16,8 @@ public:
 	void save() const;
 
 private:
-	int d_model;
-	int d_ff;
+	size_t d_model;
+	size_t d_ff;
 	tfm::Tensor W1;
 	tfm::Tensor W2;
 	tfm::Tensor b1;

@@ -7,7 +7,7 @@ namespace tfm {
 
 class MultiHeadAttention {
 public:
-	MultiHeadAttention(int num_heads, int d_model, std::string filename);
+	MultiHeadAttention(size_t num_heads, size_t d_model, std::string filename);
 
 	// Method to perform multi-head attention
 	const tfm::Tensor forward(const tfm::Tensor& queries, const tfm::Tensor& keys, const tfm::Tensor& values);
@@ -16,8 +16,11 @@ public:
 	void save() const;
 
 private:
-	int num_heads;
-	int d_model;
+	size_t num_heads;
+	size_t d_model;
+	
+
+
 	tfm::Tensor output_;
 	std::string filename;
 };

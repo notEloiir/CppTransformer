@@ -2,11 +2,11 @@
 #include <string>
 
 
-tfm::Encoder::Encoder(int num_layers, int num_heads, int d_model, int d_ff, std::string filename) :
+tfm::Encoder::Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename) :
 	output_(),
 	filename(filename) {
 
-	for (int i = 0; i < num_layers; ++i) {
+	for (size_t i = 0; i < num_layers; ++i) {
 		layers.emplace_back(num_heads, d_model, d_ff, filename + "layer" + std::to_string(i));
 	}
 }
@@ -24,7 +24,7 @@ const tfm::Tensor tfm::Encoder::forward(const tfm::Tensor& input) {
 }
 
 void tfm::Encoder::save() const {
-	for (int i = 0; i < layers.size(); i++) {
+	for (size_t i = 0; i < layers.size(); i++) {
 		layers[i].save();
 	}
 }

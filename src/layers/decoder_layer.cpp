@@ -1,7 +1,7 @@
 #include <layers/decoder_layer.h>
 
 
-tfm::DecoderLayer::DecoderLayer(int num_heads, int d_model, int d_ff, std::string filename) :
+tfm::DecoderLayer::DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename) :
 	self_attention(num_heads, d_model, filename + "self_attention"),
 	encoder_decoder_attention(num_heads, d_model, filename + "encoder_decoder_attention"),
 	feed_forward(d_model, d_ff, filename + "feed_forward"),

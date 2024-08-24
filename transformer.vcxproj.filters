@@ -149,7 +149,6 @@
     <ClCompile Include="utils\cuda_utils.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="example.cpp" />
     <ClCompile Include="test\run_tests.cpp">
       <Filter>test</Filter>
     </ClCompile>

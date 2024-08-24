@@ -10,7 +10,7 @@ namespace tfm
 
 class Decoder {
 public:
-	Decoder(int num_layers, int num_heads, int d_model, int d_ff, std::string filename);
+	Decoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename);
 
 	// Method to perform forward pass through the decoder
 	const tfm::Tensor forward(const tfm::Tensor& input, const tfm::Tensor& encoder_output);

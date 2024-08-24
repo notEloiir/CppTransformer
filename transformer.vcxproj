@@ -110,7 +110,6 @@
     <ClInclude Include="utils\cuda_utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="example.cpp" />
     <ClCompile Include="src\backend\cpu\cpu_matrix_math.cpp" />
     <ClCompile Include="src\layers\decoder.cpp" />
     <ClCompile Include="src\layers\decoder_layer.cpp" />

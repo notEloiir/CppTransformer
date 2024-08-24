@@ -10,7 +10,7 @@ namespace tfm
 
 class DecoderLayer {
 public:
-	DecoderLayer(int num_heads, int d_model, int d_ff, std::string filename);
+	DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename);
 
 	// Method to perform forward pass through the decoder layer
 	tfm::Tensor forward(const tfm::Tensor& input, const tfm::Tensor& encoder_output);
@@ -22,7 +22,7 @@ private:
 	MultiHeadAttention self_attention;
 	MultiHeadAttention encoder_decoder_attention;
 	FeedForward feed_forward;
-	int d_model;
+	size_t d_model;
 	tfm::Tensor output_;
 	std::string filename;
 };

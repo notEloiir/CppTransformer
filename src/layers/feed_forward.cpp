@@ -1,7 +1,7 @@
 #include <layers/feed_forward.h>
 
 
-tfm::FeedForward::FeedForward(int d_model, int d_ff, std::string filename) :
+tfm::FeedForward::FeedForward(size_t d_model, size_t d_ff, std::string filename) :
 	d_model(d_model),
 	d_ff(d_ff),
 	W1(d_model, d_ff, tfm::Device(tfm::DeviceType::CPU)),

@@ -10,7 +10,7 @@ namespace tfm
 
 class EncoderLayer {
 public:
-	EncoderLayer(int num_heads, int d_model, int d_ff, std::string filename);
+	EncoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename);
 
 	tfm::Tensor forward(const tfm::Tensor& input);
 	tfm::Tensor output() const { return output_.nonOwningCopy(); }
@@ -20,7 +20,7 @@ public:
 private:
 	MultiHeadAttention self_attention;
 	FeedForward feed_forward;
-	int d_model;
+	size_t d_model;
 	tfm::Tensor output_;
 	std::string filename;
 };

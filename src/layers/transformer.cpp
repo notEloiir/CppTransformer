@@ -2,7 +2,7 @@
 #include <filesystem>
 
 
-tfm::Transformer::Transformer(int num_layers, int num_heads, int d_model, int d_ff, int vocab_size, int max_seq_len, std::string model_name="def") :
+tfm::Transformer::Transformer(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, size_t vocab_size, size_t max_seq_len, std::string model_name="def") :
 	encoder(num_layers, num_heads, d_model, d_ff, (std::filesystem::path("models") / model_name / "encoder").string()),
 	decoder(num_layers, num_heads, d_model, d_ff, (std::filesystem::path("models") / model_name / "decoder").string()),
 	src_embedding(vocab_size, d_model, (std::filesystem::path("models") / model_name / "embedding").string()),

@@ -10,7 +10,7 @@ namespace tfm
 
 class Encoder {
 public:
-	Encoder(int num_layers, int num_heads, int d_model, int d_ff, std::string filename);
+	Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename);
 
 	// Method to perform forward pass through the encoder
 	const tfm::Tensor forward(const tfm::Tensor& input);

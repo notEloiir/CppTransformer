@@ -1,7 +1,7 @@
 #include <layers/encoder_layer.h>
 
 
-tfm::EncoderLayer::EncoderLayer(int num_heads, int d_model, int d_ff, std::string filename) :
+tfm::EncoderLayer::EncoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename) :
 	self_attention(num_heads, d_model, filename + "self_attention"),
 	feed_forward(d_model, d_ff, filename + "feed forward"),
 	d_model(d_model),
