@@ -5,12 +5,11 @@
 #include <fstream>
 #include <cuda_runtime.h>
 
-#include <tensor/tensor_data.h>
 #include <tensor/tensor.h>
 #include <cuda_utils.h>
 
 
-tfm::TensorData::TensorData() :
+tfm::Tensor::Tensor() :
 	cols_(0),
 	rows_(0),
 	data_(nullptr),
@@ -26,7 +25,7 @@ tfm::TensorData::TensorData() :
 	device_(tfm::DeviceType::CPU) {}
 
 
-tfm::TensorData::TensorData(size_t cols, size_t rows, Device device) :
+tfm::Tensor::Tensor(size_t cols, size_t rows, Device device) :
 	cols_(cols),
 	rows_(rows),
 	data_((float*)malloc(cols* rows * sizeof(float))),
@@ -56,7 +55,27 @@ tfm::TensorData::TensorData(size_t cols, size_t rows, Device device) :
 }
 
 
-tfm::TensorData::TensorData(const TensorData& other) :
+tfm::Tensor::Tensor(const std::vector<tfm::Tensor>& tensors, size_t dim) :
+	cols_(0),
+	rows_(0),
+	data_(nullptr),
+	dataCuda_(nullptr),
+	data2D_(nullptr),
+	weights_(nullptr),
+	weightsCuda_(nullptr),
+	bias_(nullptr),
+	biasCuda_(nullptr),
+	isOwning_(false),
+	isOwningCuda_(false),
+	isDataContinuous_(false),
+	device_(tfm::DeviceType::CPU) {
+
+	// TODO: implement
+	fprintf(stderr, "not implemented");
+}
+
+
+tfm::Tensor::Tensor(const Tensor& other) :
 	cols_(other.cols_),
 	rows_(other.rows_),
 	data_((float*)malloc(other.cols_* other.rows_ * sizeof(float))),
@@ -128,10 +147,12 @@ tfm::TensorData::TensorData(const TensorData& other) :
 	}
 }
 
-tfm::TensorData& tfm::TensorData::operator=(const TensorData& other) {
+tfm::Tensor& tfm::Tensor::operator=(const Tensor& other) {
 	if (this == &other) {
 		return *this;
 	}
+
+	cleanup();
 
 	cols_ = other.cols_;
 	rows_ = other.rows_;
@@ -206,7 +227,27 @@ tfm::TensorData& tfm::TensorData::operator=(const TensorData& other) {
 	return *this;
 }
 
-tfm::TensorData::TensorData(tfm::TensorData&& other) noexcept :
+
+tfm::Tensor::Tensor(const Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset) :
+	cols_(0),
+	rows_(0),
+	data_(nullptr),
+	dataCuda_(nullptr),
+	data2D_(nullptr),
+	weights_(nullptr),
+	weightsCuda_(nullptr),
+	bias_(nullptr),
+	biasCuda_(nullptr),
+	isOwning_(false),
+	isOwningCuda_(false),
+	isDataContinuous_(false),
+	device_(tfm::DeviceType::CPU) {
+
+	// TODO: implement
+	fprintf(stderr, "not implemented");
+}
+
+tfm::Tensor::Tensor(tfm::Tensor&& other) noexcept :
 	cols_(other.cols_),
 	rows_(other.rows_),
 	data_(other.data_),
@@ -227,7 +268,7 @@ tfm::TensorData::TensorData(tfm::TensorData&& other) noexcept :
 	other.cleanup();
 }
 
-tfm::TensorData& tfm::TensorData::operator=(tfm::TensorData&& other) noexcept {
+tfm::Tensor& tfm::Tensor::operator=(tfm::Tensor&& other) noexcept {
 	if (this == &other) {
 		return *this;
 	}
@@ -255,7 +296,75 @@ tfm::TensorData& tfm::TensorData::operator=(tfm::TensorData&& other) noexcept {
 }
 
 
-float* tfm::TensorData::data() const {
+tfm::Tensor tfm::Tensor::nonOwningCopy() const {
+	tfm::Tensor v;
+
+	v.cols_ = cols_;
+	v.rows_ = rows_;
+	v.data_ = data_;
+	v.dataCuda_ = dataCuda_;
+	v.data2D_ = (float**)malloc(v.cols_ * sizeof(float*));
+	v.weights_ = weights_;
+	v.weightsCuda_ = weightsCuda_;
+	v.bias_ = bias_;
+	v.biasCuda_ = biasCuda_;
+	v.isOwning_ = false;
+	v.isOwningCuda_ = false;
+	v.isDataContinuous_ = isDataContinuous_;
+	v.device_ = device_;
+
+	if (v.data2D_ == NULL) {
+		fprintf(stderr, "malloc failed");
+		exit(1);
+	}
+
+	for (size_t col = 0; col < cols_; col++) {
+		v.data2D_[col] = data2D_[col];
+	}
+
+	return v;
+}
+
+
+tfm::Tensor tfm::Tensor::nonOwningCopy(const std::vector<size_t>& colIds) const {
+	tfm::Tensor v = nonOwningCopy();
+	v.isDataContinuous_ = false;
+	if (v.cols_ != colIds.size()) {
+		v.cols_ = colIds.size();
+		v.data2D_ = (float**)realloc((void*)v.data2D_, v.cols_ * sizeof(float*));
+	}
+
+	for (size_t col = 0; col < v.cols(); col++) {
+		v.data2D_[col] = data2D_[colIds[col]];
+	}
+
+	return v;
+}
+
+
+tfm::Tensor tfm::Tensor::nonOwningCopy(size_t cols, size_t colOffset) const {
+	tfm::Tensor v = nonOwningCopy();
+
+	if (colOffset + cols > cols_) {
+		fprintf(stderr, "colOffset + cols can't be larger than column count of this matrix");
+		exit(1);
+	}
+
+	v.cols_ = cols;
+	v.data_ = data_ + rows_ * colOffset;
+	if (isOwningCuda_) {
+		v.dataCuda_ = colData(colOffset);
+	}
+
+	for (size_t col = 0; col < cols; col++) {
+		data2D_[col] = data2D_[colOffset + col];
+	}
+
+	return v;
+}
+
+
+float* tfm::Tensor::data() const {
 	if (device_.isCPU()) {
 		return data_;
 	}
@@ -264,7 +373,7 @@ float* tfm::TensorData::data() const {
 	}
 }
 
-float* tfm::TensorData::colData(size_t col) const {
+float* tfm::Tensor::colData(size_t col) const {
 	if (device_.isCPU()) {
 		return data2D_[col];
 	}
@@ -273,7 +382,7 @@ float* tfm::TensorData::colData(size_t col) const {
 	}
 }
 
-float* tfm::TensorData::weights() const {
+float* tfm::Tensor::weights() const {
 	if (device_.isCPU()) {
 		return weights_;
 	}
@@ -282,7 +391,7 @@ float* tfm::TensorData::weights() const {
 	}
 }
 
-float* tfm::TensorData::bias() const {
+float* tfm::Tensor::bias() const {
 	if (device_.isCPU()) {
 		return bias_;
 	}
@@ -292,7 +401,7 @@ float* tfm::TensorData::bias() const {
 }
 
 
-void tfm::TensorData::initWeights() {
+void tfm::Tensor::initWeights() {
 	Device origDevice = device_;
 	moveTo(Device(tfm::DeviceType::CPU));
 
@@ -309,7 +418,7 @@ void tfm::TensorData::initWeights() {
 	moveTo(origDevice);
 }
 
-void tfm::TensorData::initBias() {
+void tfm::Tensor::initBias() {
 	Device origDevice = device_;
 	moveTo(Device(tfm::DeviceType::CPU));
 
@@ -327,7 +436,7 @@ void tfm::TensorData::initBias() {
 }
 
 
-void tfm::TensorData::moveTo(Device newDevice){
+void tfm::Tensor::moveTo(Device newDevice){
 	if (device_ == newDevice) {
 		return;
 	}
@@ -410,7 +519,7 @@ void tfm::TensorData::moveTo(Device newDevice){
 }
 
 
-int tfm::TensorData::saveToPath(const std::string& path) const {
+int tfm::Tensor::saveToPath(const std::string& path) const {
 	std::ofstream file;
 	file.open(path, std::ios::out | std::ios::binary);
 	if (!file.is_open()) {
@@ -419,7 +528,7 @@ int tfm::TensorData::saveToPath(const std::string& path) const {
 	}
 
 	Device origDevice = device_;
-	const_cast<tfm::TensorData *>(this)->moveTo(Device(tfm::DeviceType::CPU));
+	const_cast<tfm::Tensor*>(this)->moveTo(Device(tfm::DeviceType::CPU));
 
 	for (size_t col = 0; col < cols(); col++) {
 		for (size_t row = 0; row < rows(); row++) {
@@ -437,12 +546,12 @@ int tfm::TensorData::saveToPath(const std::string& path) const {
 	}
 
 	file.close();
-	const_cast<tfm::TensorData*>(this)->moveTo(origDevice);
+	const_cast<tfm::Tensor*>(this)->moveTo(origDevice);
 	return 0;
 }
 
 
-int tfm::TensorData::loadFromPath(const std::string& path, bool loadWeightsAndBias) {
+int tfm::Tensor::loadFromPath(const std::string& path, bool loadWeightsAndBias) {
 	std::ifstream file;
 	file.open(path, std::ios::in | std::ios::binary);
 	if (!file.good()) {
@@ -492,7 +601,7 @@ int tfm::TensorData::loadFromPath(const std::string& path, bool loadWeightsAndBi
 }
 
 
-void tfm::TensorData::allocate() {
+void tfm::Tensor::allocate() {
 	isOwning_ = true;
 	isDataContinuous_ = true;
 
@@ -524,7 +633,7 @@ void tfm::TensorData::allocate() {
 }
 
 
-void tfm::TensorData::deallocate() {
+void tfm::Tensor::deallocate() {
 	if (isOwning_) {
 		std::free(data_);
 		std::free(weights_);
@@ -534,12 +643,12 @@ void tfm::TensorData::deallocate() {
 }
 
 
-void tfm::TensorData::setDevice() {
+void tfm::Tensor::setDevice() {
 	checkCudaError(cudaSetDevice(device_.index()), "Failed to set device");
 }
 
 
-void tfm::TensorData::deallocateCuda() {
+void tfm::Tensor::deallocateCuda() {
 	if (isOwningCuda_) {
 		setDevice();
 		cudaFree(dataCuda_);
@@ -550,7 +659,7 @@ void tfm::TensorData::deallocateCuda() {
 }
 
 
-void tfm::TensorData::allocateCuda() {
+void tfm::Tensor::allocateCuda() {
 	isOwningCuda_ = true;
 	setDevice();
 
@@ -565,7 +674,7 @@ void tfm::TensorData::allocateCuda() {
 }
 
 
-void tfm::TensorData::cleanup() {
+void tfm::Tensor::cleanup() {
 	deallocate();
 	deallocateCuda();
 	std::free(data2D_);
@@ -586,4 +695,14 @@ void tfm::TensorData::cleanup() {
 }
 
 
+std::ostream& tfm::operator<<(std::ostream& os, const Tensor& t) {
+	os << "Tensor size [" << t.cols() << ", " << t.rows() << "]\n";
+	for (size_t row = 0; row < t.rows(); row++) {
+		for (size_t col = 0; col < t.cols(); col++) {
+			os << t[col][row] << ' ';
+		}
+		os << '\n';
+	}
 
+	return os;
+}

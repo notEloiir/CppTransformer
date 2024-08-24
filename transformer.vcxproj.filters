@@ -40,9 +40,6 @@
     <ClInclude Include="include\backend\cpu\cpu_matrix_math.h">
       <Filter>include\backend\cpu</Filter>
     </ClInclude>
-    <ClInclude Include="include\tensor\tensor_data.h">
-      <Filter>include\tensor</Filter>
-    </ClInclude>
     <ClInclude Include="utils\cuda_utils.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -134,7 +131,7 @@
     <ClCompile Include="src\layers\transformer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\tensor\tensor.cpp">
+    <ClCompile Include="src\tensor\tensor_math.cpp">
       <Filter>src\tensor</Filter>
     </ClCompile>
     <ClCompile Include="src\tensor\device.cpp">

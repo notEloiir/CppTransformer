@@ -11,7 +11,7 @@ tfm::FeedForward::FeedForward(size_t d_model, size_t d_ff, std::string filename)
 	output_(), 
 	filename(filename) {
 
-	// if file doesn't exist, generate random matrix
+	// try to load file, if doesn't exist, generate random matrix
 	if (1 == W1.loadFromPath(filename + "W1")) {
 		W1.random();
 	}
