@@ -17,18 +17,19 @@ public:
 	Tensor();
 	// Column-major matrix of size [cols, rows]
 	Tensor(size_t cols, size_t rows, Device device);
-	// Concatenate tensors
-	Tensor(const std::vector<tfm::Tensor>& tensors, size_t dim = 0);
 	// Copy (deep, has ownership)
 	Tensor(const Tensor& other);
 	Tensor& operator=(const Tensor& other);
-	// Submatrix of size [cols, rows] and given offsets (deep copy, has ownership)
-	Tensor(const Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset);
 	// Move
 	Tensor(Tensor&& other) noexcept;
 	Tensor& operator=(Tensor&& other) noexcept;
 	// Destructor
 	~Tensor() { cleanup(); }
+
+	// Concatenate tensors
+	static Tensor concatenate(const std::vector<tfm::Tensor>& tensors, size_t dim = 0);
+	// Submatrix of size [cols, rows] and given offsets (deep copy, has ownership)
+	static Tensor subtensor(const Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset);
 
 	// Copy without ownership
 	Tensor nonOwningCopy() const;

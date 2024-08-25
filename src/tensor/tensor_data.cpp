@@ -55,26 +55,6 @@ tfm::Tensor::Tensor(size_t cols, size_t rows, Device device) :
 }
 
 
-tfm::Tensor::Tensor(const std::vector<tfm::Tensor>& tensors, size_t dim) :
-	cols_(0),
-	rows_(0),
-	data_(nullptr),
-	dataCuda_(nullptr),
-	data2D_(nullptr),
-	weights_(nullptr),
-	weightsCuda_(nullptr),
-	bias_(nullptr),
-	biasCuda_(nullptr),
-	isOwning_(false),
-	isOwningCuda_(false),
-	isDataContinuous_(false),
-	device_(tfm::DeviceType::CPU) {
-
-	// TODO: implement
-	fprintf(stderr, "not implemented");
-}
-
-
 tfm::Tensor::Tensor(const Tensor& other) :
 	cols_(other.cols_),
 	rows_(other.rows_),
@@ -146,6 +126,7 @@ tfm::Tensor::Tensor(const Tensor& other) :
 		}
 	}
 }
+
 
 tfm::Tensor& tfm::Tensor::operator=(const Tensor& other) {
 	if (this == &other) {
@@ -227,25 +208,6 @@ tfm::Tensor& tfm::Tensor::operator=(const Tensor& other) {
 	return *this;
 }
 
-
-tfm::Tensor::Tensor(const Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset) :
-	cols_(0),
-	rows_(0),
-	data_(nullptr),
-	dataCuda_(nullptr),
-	data2D_(nullptr),
-	weights_(nullptr),
-	weightsCuda_(nullptr),
-	bias_(nullptr),
-	biasCuda_(nullptr),
-	isOwning_(false),
-	isOwningCuda_(false),
-	isDataContinuous_(false),
-	device_(tfm::DeviceType::CPU) {
-
-	// TODO: implement
-	fprintf(stderr, "not implemented");
-}
 
 tfm::Tensor::Tensor(tfm::Tensor&& other) noexcept :
 	cols_(other.cols_),
@@ -364,43 +326,6 @@ tfm::Tensor tfm::Tensor::nonOwningCopy(size_t cols, size_t colOffset) const {
 }
 
 
-float* tfm::Tensor::data() const {
-	if (device_.isCPU()) {
-		return data_;
-	}
-	else {
-		return dataCuda_;
-	}
-}
-
-float* tfm::Tensor::colData(size_t col) const {
-	if (device_.isCPU()) {
-		return data2D_[col];
-	}
-	else {
-		return dataCuda_ + col * rows_;
-	}
-}
-
-float* tfm::Tensor::weights() const {
-	if (device_.isCPU()) {
-		return weights_;
-	}
-	else {
-		return weightsCuda_;
-	}
-}
-
-float* tfm::Tensor::bias() const {
-	if (device_.isCPU()) {
-		return bias_;
-	}
-	else {
-		return biasCuda_;
-	}
-}
-
-
 void tfm::Tensor::initWeights() {
 	Device origDevice = device_;
 	moveTo(Device(tfm::DeviceType::CPU));
@@ -417,6 +342,7 @@ void tfm::Tensor::initWeights() {
 
 	moveTo(origDevice);
 }
+
 
 void tfm::Tensor::initBias() {
 	Device origDevice = device_;
@@ -692,17 +618,4 @@ void tfm::Tensor::cleanup() {
 	isOwningCuda_ = false;
 	isDataContinuous_ = false;
 	device_ = tfm::DeviceType::CPU;
-}
-
-
-std::ostream& tfm::operator<<(std::ostream& os, const Tensor& t) {
-	os << "Tensor size [" << t.cols() << ", " << t.rows() << "]\n";
-	for (size_t row = 0; row < t.rows(); row++) {
-		for (size_t col = 0; col < t.cols(); col++) {
-			os << t[col][row] << ' ';
-		}
-		os << '\n';
-	}
-
-	return os;
 }
