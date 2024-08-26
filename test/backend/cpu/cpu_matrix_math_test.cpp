@@ -118,3 +118,36 @@ TEST_CASE("CPU tensor ReLU") {
 		CHECK_EQ(t[i / t.rows()][i % t.rows()], doctest::Approx(expected[i / expected.rows()][i % expected.rows()]));
 	}
 }
+TEST_CASE("CPU tensor BLAS1") {
+	tfm::Tensor t(2, 3, tfm::Device(tfm::DeviceType::CPU));
+	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
+		t[i % t.cols()][i / t.cols()] = i;
+	}
+
+	tfm::Tensor res = cpuMatMultBLAS1(t, 2.5f);
+
+	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
+		CHECK_EQ(res[i / res.rows()][i % res.rows()], doctest::Approx(2.5f * t[i / t.rows()][i % t.rows()]));
+	}
+}
+TEST_CASE("CPU tensor softmax") {
+	tfm::Tensor t(2, 3, tfm::Device(tfm::DeviceType::CPU));
+	tfm::Tensor expected(2, 3, tfm::Device(tfm::DeviceType::CPU));
+
+	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
+		t[i / t.rows()][i % t.rows()] = i * i;
+	}
+
+	expected[0][0] = 0.0171478f;
+	expected[0][1] = 0.0466126f;
+	expected[0][2] = 0.93624f;
+	expected[1][0] = 0.0f;
+	expected[1][1] = 0.000123f;
+	expected[1][2] = 0.999876f;
+
+	cpuSoftmax(t);
+
+	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
+		CHECK_EQ(t[i / t.rows()][i % t.rows()], doctest::Approx(expected[i / expected.rows()][i % expected.rows()]));
+	}
+}
