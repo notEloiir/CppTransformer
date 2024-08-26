@@ -39,15 +39,15 @@ const tfm::Tensor tfm::MultiHeadAttention::forward(const tfm::Tensor& queries, c
 	std::vector<tfm::Tensor> O_heads(num_heads);
 
 	for (size_t i = 0; i < num_heads; i++) {
-		Q_heads[i] = tfm::Tensor(Q, Q.cols(), d_key, 0, i * d_key);
-		K_heads[i] = tfm::Tensor(K, K.cols(), d_key, 0, i * d_key);
-		V_heads[i] = tfm::Tensor(V, V.cols(), d_key, 0, i * d_key);
+		Q_heads[i] = tfm::Tensor::subtensor(Q, Q.cols(), d_key, 0, i * d_key);
+		K_heads[i] = tfm::Tensor::subtensor(K, K.cols(), d_key, 0, i * d_key);
+		V_heads[i] = tfm::Tensor::subtensor(V, V.cols(), d_key, 0, i * d_key);
 
 		O_heads[i] = attention_head(Q_heads[i], K_heads[i], V_heads[i]);
 	}
 
 	// Concatenate along dim 1
-	output_ = tfm::Tensor(O_heads, 1);
+	output_ = tfm::Tensor::concatenate(O_heads, 1);
 
 	return output();
 }

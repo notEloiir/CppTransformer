@@ -3,39 +3,122 @@
 #include <cstdio>
 #include <cassert>
 #include <fstream>
+#include <cuda_runtime.h>
 
 #include <tensor/tensor.h>
+#include <cuda_utils.h>
 
 
-static tfm::Tensor concatenate(const std::vector<tfm::Tensor>& tensors, size_t dim) {
+tfm::Tensor tfm::Tensor::concatenate(const std::vector<tfm::Tensor>& tensors, size_t dim) {
 	if (tensors.empty()) {
-		return;
+		return tfm::Tensor();
 	}
 	if (dim >= 2) {
 		fprintf(stderr, "Concatenating tensors along dim > 1 not supported.");
-		return;
+		exit(EXIT_FAILURE);
 	}
 	for (size_t i = 0; i < tensors.size() - 1; i++) {
-		if (dim == 0 && tensors[i].rows() != tensors[i + 1].rows()) {
+		if ((dim == 0 && tensors[i].rows() != tensors[i + 1].rows()) || (dim == 1 && tensors[i].cols() != tensors[i + 1].cols())) {
 			fprintf(stderr, "Concatenating tensors along dim > 1 not supported.");
-			return;
+			exit(EXIT_FAILURE);
+		}
+		if (tensors[i].device() != tensors[i + 1].device()) {
+			fprintf(stderr, "Concatenated tensors must be on the same device.");
+			exit(EXIT_FAILURE);
 		}
 	}
 
-	// TODO: implement
-	fprintf(stderr, "not implemented");
+	size_t cols, rows;
+	if (dim == 0) {
+		cols = 0;
+		rows = tensors[0].rows();
+		for (size_t i = 0; i < tensors.size(); i++) {
+			cols += tensors[i].cols();
+		}
+	}
+	else {  // dim == 1
+		cols = tensors[0].cols();
+		rows = 0;
+		for (size_t i = 0; i < tensors.size(); i++) {
+			rows += tensors[i].rows();
+		}
+	}
+
+	tfm::Tensor t(cols, rows, tensors[0].device());
+
+	if (t.device().isCUDA()) {
+		// copy GPU side
+		if (dim == 0) {
+			size_t start_pos = 0;
+			for (size_t i = 0; i < tensors.size(); i++) {
+				checkCudaError(cudaMemcpy(t.data() + start_pos , tensors[i].data(), tensors[i].cols() * tensors[i].rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
+				start_pos += tensors[i].cols() * tensors[i].rows();
+			}
+		}
+		else {  // dim == 1
+			size_t row_start = 0;
+			for (size_t i = 0; i < tensors.size(); i++) {
+				for (size_t col = 0; col < tensors[i].cols(); col++) {
+					checkCudaError(cudaMemcpy(t.data() + t.rows() * col + row_start, tensors[i].data() + tensors[i].rows() * col, tensors[i].rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
+				}
+				row_start += tensors[i].rows();
+			}
+		}
+	}
+	else {  // device_.isCPU()
+		// copy RAM side
+		if (dim == 0) {
+			size_t start_pos = 0;
+			for (size_t i = 0; i < tensors.size(); i++) {
+				if (tensors[i].isDataContinuous_) {
+					memcpy(t.data() + start_pos, tensors[i].data(), tensors[i].cols() * tensors[i].rows() * sizeof(float));
+				}
+				else {
+					for (size_t col = 0; col < tensors[i].cols(); col++) {
+						memcpy(t.data() + start_pos + col * t.rows(), tensors[i].colData(col), tensors[i].rows() * sizeof(float));
+					}
+				}
+				start_pos += tensors[i].cols() * tensors[i].rows();
+			}
+		}
+		else {  // dim == 1
+			size_t row_start = 0;
+			for (size_t i = 0; i < tensors.size(); i++) {
+				for (size_t col = 0; col < tensors[i].cols(); col++) {
+					memcpy(t.data() + row_start + col * t.rows(), tensors[i].colData(col), tensors[i].rows() * sizeof(float));
+				}
+				row_start += tensors[i].rows();
+			}
+		}
+	}
+
+	return t;
 }
 
 
 
-static tfm::Tensor subtensor(const tfm::Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset) {
+tfm::Tensor tfm::Tensor::subtensor(const tfm::Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset) {
 	if (colOffset + cols > other.cols() || rowOffset + rows > other.rows()) {
 		fprintf(stderr, "colOffset + cols > other.cols() || rowOffset + rows > other.rows()");
 		exit(EXIT_FAILURE);
 	}
 
-	// TODO: implement
-	fprintf(stderr, "not implemented");
+	tfm::Tensor t(cols, rows, other.device());
+
+	if (t.device().isCUDA()) {
+		// copy GPU side
+		for (size_t col = 0; col < cols; col++) {
+			checkCudaError(cudaMemcpy(t.data() + rows * col, other.data() + other.rows() * (col + colOffset) + rowOffset, rows * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
+		}
+	}
+	else {  // device_.isCPU()
+		// copy RAM side
+		for (size_t col = 0; col < cols; col++) {
+			memcpy(t.data() + rows * col, other.colData(col + colOffset) + rowOffset, rows * sizeof(float));
+		}
+	}
+
+	return t;
 }
 
 

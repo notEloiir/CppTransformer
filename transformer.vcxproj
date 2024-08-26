@@ -122,6 +122,7 @@
     <ClCompile Include="src\tensor\device.cpp" />
     <ClCompile Include="src\tensor\tensor_math.cpp" />
     <ClCompile Include="src\tensor\tensor_data.cpp" />
+    <ClCompile Include="src\tensor\tensor_utils.cpp" />
     <ClCompile Include="test\backend\cpu\cpu_matrix_math_test.cpp" />
     <ClCompile Include="test\backend\cuda\cuda_matrix_math_test.cpp" />
     <ClCompile Include="test\tensor\tensor_test.cpp" />

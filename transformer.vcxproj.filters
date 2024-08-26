@@ -158,6 +158,9 @@
     <ClCompile Include="test\backend\cuda\cuda_matrix_math_test.cpp">
       <Filter>test\backend\cuda</Filter>
     </ClCompile>
+    <ClCompile Include="src\tensor\tensor_utils.cpp">
+      <Filter>src\tensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\backend\cuda\cuda_matrix_math.cu">
