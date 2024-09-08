@@ -2,5 +2,5 @@
 #include <cublas_v2.h>
 
 
-void checkCudaError(cudaError_t result, const char* msg);
-void checkCublasError(cublasStatus_t result, const char* msg);
+void check_cuda_error(cudaError_t result, const char* msg);
+void check_cublas_error(cublasStatus_t result, const char* msg);

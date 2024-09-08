@@ -3,16 +3,16 @@
 
 
 tfm::Device::Device(DeviceType type, int index) noexcept :
-	type(type),
-	id(index)
+	type_(type),
+	id_(index)
 {}
 
 
-const int tfm::Device::deviceCount = []() -> int {
+const int tfm::Device::device_count = []() -> int {
     int count = 0;
 
 	#ifndef NO_CUDA
-	checkCudaError(cudaGetDeviceCount(&count), "cudaGetDeviceCount failed");
+	check_cuda_error(cudaGetDeviceCount(&count), "cudaGetDeviceCount failed");
 	#endif // !NO_CUDA
 
     return count;

@@ -11,8 +11,8 @@ TEST_CASE("Empty tensor") {
 	CHECK_EQ(empty.data(), nullptr);
 	CHECK_EQ(empty.weights(), nullptr);
 	CHECK_EQ(empty.bias(), nullptr);
-	CHECK_FALSE(empty.hasBias());
-	CHECK_FALSE(empty.hasWeights());
+	CHECK_FALSE(empty.has_bias());
+	CHECK_FALSE(empty.has_weights());
 }
 TEST_CASE("Not empty tensor") {
 	tfm::Tensor t(2, 2, tfm::Device(tfm::DeviceType::CPU));
@@ -26,28 +26,28 @@ TEST_CASE("Not empty tensor") {
 	CHECK_NE(t.data(), nullptr);
 	CHECK_EQ(t.weights(), nullptr);
 	CHECK_EQ(t.bias(), nullptr);
-	CHECK_FALSE(t.hasBias());
-	CHECK_FALSE(t.hasWeights());
+	CHECK_FALSE(t.has_bias());
+	CHECK_FALSE(t.has_weights());
 	CHECK_EQ(t[1][1], 3);
 }
 TEST_CASE("Weights") {
 	tfm::Tensor t(3, 2, tfm::Device(tfm::DeviceType::CPU));
-	t.initWeights();
+	t.init_weights();
 
 	CHECK_NE(t.weights(), nullptr);
 	CHECK_EQ(t.bias(), nullptr);
-	CHECK_FALSE(t.hasBias());
-	CHECK(t.hasWeights());
+	CHECK_FALSE(t.has_bias());
+	CHECK(t.has_weights());
 	CHECK_EQ(t.weights()[1], 1.0f);
 }
 TEST_CASE("Bias") {
 	tfm::Tensor t(3, 2, tfm::Device(tfm::DeviceType::CPU));
-	t.initBias();
+	t.init_bias();
 
 	CHECK_EQ(t.weights(), nullptr);
 	CHECK_NE(t.bias(), nullptr);
-	CHECK(t.hasBias());
-	CHECK_FALSE(t.hasWeights());
+	CHECK(t.has_bias());
+	CHECK_FALSE(t.has_weights());
 	CHECK_EQ(t.bias()[1], 0.0f);
 }
 TEST_CASE("Copy constructor and assignment operator") {
@@ -55,7 +55,7 @@ TEST_CASE("Copy constructor and assignment operator") {
 	for (size_t i = 0; i < orig.cols() * orig.rows(); i++) {
 		orig[i / orig.rows()][i % orig.rows()] = i;
 	}
-	orig.initBias();
+	orig.init_bias();
 	tfm::Tensor copy_constructed(orig);
 	tfm::Tensor copy_assigned = orig;
 
@@ -69,7 +69,7 @@ TEST_CASE("Swap constructor and assignment operator") {
 	for (size_t i = 0; i < orig.cols() * orig.rows(); i++) {
 		orig[i / orig.rows()][i % orig.rows()] = i;
 	}
-	orig.initBias();
+	orig.init_bias();
 	tfm::Tensor swap_constructed(std::move(orig));
 
 	CHECK_EQ(orig.data(), nullptr);
@@ -82,26 +82,26 @@ TEST_CASE("Swap constructor and assignment operator") {
 }
 TEST_CASE("Non owning copy") {
 	tfm::Tensor orig(3, 2, tfm::Device(tfm::DeviceType::CPU));
-	orig.initBias();
-	tfm::Tensor another(orig.nonOwningCopy());
+	orig.init_bias();
+	tfm::Tensor another(orig.non_owning_copy());
 
 	CHECK_EQ(orig.cols(), another.cols());
 	CHECK_EQ(orig.rows(), another.rows());
 	CHECK_EQ(orig.data(), another.data());
-	CHECK_EQ(orig.colData(1), another.colData(1));
+	CHECK_EQ(orig.col_data(1), another.col_data(1));
 	CHECK_EQ(orig.bias(), another.bias());
 	CHECK_EQ(orig.weights(), another.weights());
-	CHECK_EQ(orig.hasBias(), another.hasBias());
-	CHECK_EQ(orig.hasWeights(), another.hasWeights());
+	CHECK_EQ(orig.has_bias(), another.has_bias());
+	CHECK_EQ(orig.has_weights(), another.has_weights());
 
 	orig[0][0] = 4.0f;
 	orig[2][1] = 5.0f;
 
-	another = orig.nonOwningCopy({ 2, 1 });
+	another = orig.non_owning_copy({ 2, 1 });
 
 	CHECK_EQ(another.cols(), 2);
 	CHECK_EQ(another.rows(), 2);
-	CHECK_EQ(another.colData(0), orig.colData(2));
+	CHECK_EQ(another.col_data(0), orig.col_data(2));
 	CHECK_EQ(another[0][1], 5.0f);
 }
 TEST_CASE("Concatenate") {
@@ -109,38 +109,38 @@ TEST_CASE("Concatenate") {
 	for (size_t i = 0; i < orig.cols() * orig.rows(); i++) {
 		orig[i / orig.rows()][i % orig.rows()] = i * i;
 	}
-	tfm::Tensor swappedCols = orig.nonOwningCopy({ 1, 0 });
-	tfm::Tensor catD0 = tfm::Tensor::concatenate({ orig, swappedCols }, 0);
-	CHECK_EQ(catD0.cols(), orig.cols() + swappedCols.cols());
-	CHECK_EQ(catD0.rows(), orig.rows());
-	CHECK_EQ(catD0[0][0], 0);
-	CHECK_EQ(catD0[0][1], 1);
-	CHECK_EQ(catD0[0][2], 4);
-	CHECK_EQ(catD0[1][0], 9);
-	CHECK_EQ(catD0[1][1], 16);
-	CHECK_EQ(catD0[1][2], 25);
-	CHECK_EQ(catD0[2][0], 9);
-	CHECK_EQ(catD0[2][1], 16);
-	CHECK_EQ(catD0[2][2], 25);
-	CHECK_EQ(catD0[3][0], 0);
-	CHECK_EQ(catD0[3][1], 1);
-	CHECK_EQ(catD0[3][2], 4);
+	tfm::Tensor swapped_cols = orig.non_owning_copy({ 1, 0 });
+	tfm::Tensor cat_D0 = tfm::Tensor::concatenate({ orig, swapped_cols }, 0);
+	CHECK_EQ(cat_D0.cols(), orig.cols() + swapped_cols.cols());
+	CHECK_EQ(cat_D0.rows(), orig.rows());
+	CHECK_EQ(cat_D0[0][0], 0);
+	CHECK_EQ(cat_D0[0][1], 1);
+	CHECK_EQ(cat_D0[0][2], 4);
+	CHECK_EQ(cat_D0[1][0], 9);
+	CHECK_EQ(cat_D0[1][1], 16);
+	CHECK_EQ(cat_D0[1][2], 25);
+	CHECK_EQ(cat_D0[2][0], 9);
+	CHECK_EQ(cat_D0[2][1], 16);
+	CHECK_EQ(cat_D0[2][2], 25);
+	CHECK_EQ(cat_D0[3][0], 0);
+	CHECK_EQ(cat_D0[3][1], 1);
+	CHECK_EQ(cat_D0[3][2], 4);
 
-	tfm::Tensor catD1 = tfm::Tensor::concatenate({ swappedCols, orig }, 1);
-	CHECK_EQ(catD1.cols(), orig.cols());
-	CHECK_EQ(catD1.rows(), orig.rows() + swappedCols.rows());
-	CHECK_EQ(catD1[0][0], 9);
-	CHECK_EQ(catD1[0][1], 16);
-	CHECK_EQ(catD1[0][2], 25);
-	CHECK_EQ(catD1[0][3], 0);
-	CHECK_EQ(catD1[0][4], 1);
-	CHECK_EQ(catD1[0][5], 4);
-	CHECK_EQ(catD1[1][0], 0);
-	CHECK_EQ(catD1[1][1], 1);
-	CHECK_EQ(catD1[1][2], 4);
-	CHECK_EQ(catD1[1][3], 9);
-	CHECK_EQ(catD1[1][4], 16);
-	CHECK_EQ(catD1[1][5], 25);
+	tfm::Tensor cat_D1 = tfm::Tensor::concatenate({ swapped_cols, orig }, 1);
+	CHECK_EQ(cat_D1.cols(), orig.cols());
+	CHECK_EQ(cat_D1.rows(), orig.rows() + swapped_cols.rows());
+	CHECK_EQ(cat_D1[0][0], 9);
+	CHECK_EQ(cat_D1[0][1], 16);
+	CHECK_EQ(cat_D1[0][2], 25);
+	CHECK_EQ(cat_D1[0][3], 0);
+	CHECK_EQ(cat_D1[0][4], 1);
+	CHECK_EQ(cat_D1[0][5], 4);
+	CHECK_EQ(cat_D1[1][0], 0);
+	CHECK_EQ(cat_D1[1][1], 1);
+	CHECK_EQ(cat_D1[1][2], 4);
+	CHECK_EQ(cat_D1[1][3], 9);
+	CHECK_EQ(cat_D1[1][4], 16);
+	CHECK_EQ(cat_D1[1][5], 25);
 }
 TEST_CASE("Subtensor") {
 	tfm::Tensor orig(4, 5, tfm::Device(tfm::DeviceType::CPU));
@@ -167,12 +167,12 @@ TEST_CASE("Move to") {
 	}
 	tfm::Tensor expected = t;
 
-	t.moveTo(tfm::Device(tfm::DeviceType::CUDA, 0));
+	t.move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
 
 	CHECK_NE(t.data(), nullptr);
 	CHECK_NE(t.data(), expected.data());
 
-	t.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	t.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(t[i / t.rows()][i % t.rows()], expected[i / expected.rows()][i % expected.rows()]);

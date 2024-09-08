@@ -2,8 +2,7 @@
 #include <compiler_flags.h>
 
 
-namespace tfm
-{
+namespace tfm {
 
 enum DeviceType {
 	CPU,
@@ -14,16 +13,16 @@ class Device {
 public:
 	Device(DeviceType type, int index=0) noexcept;
 
-	bool isCPU() const { return type == tfm::DeviceType::CPU; }
-	bool isCUDA() const { return type == tfm::DeviceType::CUDA; }
-	int index() const { return id; }
-	bool operator==(const Device& other) const { return type == other.type && id == other.id; }
+	bool is_CPU() const { return type_ == tfm::DeviceType::CPU; }
+	bool is_CUDA() const { return type_ == tfm::DeviceType::CUDA; }
+	int index() const { return id_; }
+	bool operator==(const Device& other) const { return type_ == other.type_ && id_ == other.id_; }
 
-	static const int deviceCount;
+	static const int device_count;
 
 private:
-	tfm::DeviceType type;
-	int id;
+	tfm::DeviceType type_;
+	int id_;
 
 };
 

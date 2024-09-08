@@ -13,15 +13,15 @@ tfm::Tensor::Tensor() :
 	cols_(0),
 	rows_(0),
 	data_(nullptr),
-	dataCuda_(nullptr),
-	data2D_(nullptr),
+	data_cuda_(nullptr),
+	data_2D_(nullptr),
 	weights_(nullptr),
-	weightsCuda_(nullptr),
+	weights_cuda_(nullptr),
 	bias_(nullptr),
-	biasCuda_(nullptr),
-	isOwning_(false),
-	isOwningCuda_(false),
-	isDataContinuous_(false),
+	bias_cuda_(nullptr),
+	is_owning_(false),
+	is_owning_cuda_(false),
+	is_data_continuous_(false),
 	device_(tfm::DeviceType::CPU) {}
 
 
@@ -29,28 +29,60 @@ tfm::Tensor::Tensor(size_t cols, size_t rows, Device device) :
 	cols_(cols),
 	rows_(rows),
 	data_((float*)malloc(cols* rows * sizeof(float))),
-	dataCuda_(nullptr),
-	data2D_((float**)malloc(cols * sizeof(float*))),
+	data_cuda_(nullptr),
+	data_2D_((float**)malloc(cols * sizeof(float*))),
 	weights_(nullptr),
-	weightsCuda_(nullptr),
+	weights_cuda_(nullptr),
 	bias_(nullptr),
-	biasCuda_(nullptr),
-	isOwning_(true),
-	isOwningCuda_(false),
-	isDataContinuous_(true),
+	bias_cuda_(nullptr),
+	is_owning_(true),
+	is_owning_cuda_(false),
+	is_data_continuous_(true),
 	device_(device) {
 
-	if (data_ == NULL || data2D_ == NULL) {
+	if (data_ == NULL || data_2D_ == NULL) {
 		fprintf(stderr, "malloc failed");
 		exit(1);
 	}
 	for (size_t col = 0; col < cols; col++) {
-		data2D_[col] = data_ + col * rows;
+		data_2D_[col] = data_ + col * rows;
 	}
 
-	if (device.isCUDA()) {
-		allocateCuda();
-		isOwningCuda_ = true;
+	if (device.is_CUDA()) {
+		allocate_cuda();
+		is_owning_cuda_ = true;
+	}
+}
+
+
+tfm::Tensor::Tensor(size_t cols, size_t rows, Device device, float* allocated_data) :
+	cols_(cols),
+	rows_(rows),
+	data_(nullptr),
+	data_cuda_(nullptr),
+	data_2D_((float**)malloc(cols * sizeof(float*))),
+	weights_(nullptr),
+	weights_cuda_(nullptr),
+	bias_(nullptr),
+	bias_cuda_(nullptr),
+	is_owning_(false),
+	is_owning_cuda_(false),
+	is_data_continuous_(true),
+	device_(device) {
+
+	if (data_2D_ == NULL) {
+		fprintf(stderr, "malloc failed");
+		exit(1);
+	}
+	for (size_t col = 0; col < cols; col++) {
+		data_2D_[col] = data_ + col * rows;
+	}
+
+	if (device.is_CPU()) {
+		data_ = allocated_data;
+	}
+	else {  // device.is_CUDA()
+		data_cuda_ = allocated_data;
 	}
 }
 
@@ -59,30 +91,30 @@ tfm::Tensor::Tensor(const Tensor& other) :
 	cols_(other.cols_),
 	rows_(other.rows_),
 	data_((float*)malloc(other.cols_* other.rows_ * sizeof(float))),
-	dataCuda_(nullptr),
-	data2D_((float**)malloc(other.cols_ * sizeof(float*))),
+	data_cuda_(nullptr),
+	data_2D_((float**)malloc(other.cols_ * sizeof(float*))),
 	weights_(nullptr),
-	weightsCuda_(nullptr),
+	weights_cuda_(nullptr),
 	bias_(nullptr),
-	biasCuda_(nullptr),
-	isOwning_(true),
-	isOwningCuda_(false),
-	isDataContinuous_(true),
+	bias_cuda_(nullptr),
+	is_owning_(true),
+	is_owning_cuda_(false),
+	is_data_continuous_(true),
 	device_(other.device_) {
 
-	if (data_ == NULL || data2D_ == NULL) {
+	if (data_ == NULL || data_2D_ == NULL) {
 		fprintf(stderr, "malloc failed");
 		exit(1);
 	}
 
-	if (other.hasWeights()) {
+	if (other.has_weights()) {
 		weights_ = (float*)malloc(rows_ * sizeof(float));
 		if (weights_ == NULL) {
 			fprintf(stderr, "malloc failed");
 			exit(1);
 		}
 	}
-	if (other.hasBias()) {
+	if (other.has_bias()) {
 		bias_ = (float*)malloc(rows_ * sizeof(float));
 		if (bias_ == NULL) {
 			fprintf(stderr, "malloc failed");
@@ -91,36 +123,36 @@ tfm::Tensor::Tensor(const Tensor& other) :
 	}
 
 	for (size_t col = 0; col < cols_; col++) {
-		data2D_[col] = data_ + col * rows_;
+		data_2D_[col] = data_ + col * rows_;
 	}
 
-	if (device_.isCUDA()) {
-		allocateCuda();
+	if (device_.is_CUDA()) {
+		allocate_cuda();
 		// copy GPU side
-		checkCudaError(cudaMemcpy(dataCuda_, other.dataCuda_, cols_ * rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy dataCuda_");
-		if (other.hasWeights()) {
-			checkCudaError(cudaMemcpy(weightsCuda_, other.weightsCuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy weightsCuda_");
+		check_cuda_error(cudaMemcpy(data_cuda_, other.data_cuda_, cols_ * rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy data_cuda_");
+		if (other.has_weights()) {
+			check_cuda_error(cudaMemcpy(weights_cuda_, other.weights_cuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy weights_cuda_");
 		}
-		if (other.hasBias()) {
-			checkCudaError(cudaMemcpy(biasCuda_, other.biasCuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy biasCuda_");
+		if (other.has_bias()) {
+			check_cuda_error(cudaMemcpy(bias_cuda_, other.bias_cuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy bias_cuda_");
 		}
 	}
-	else {  // device_.isCPU()
+	else {  // device_.is_CPU()
 		// copy RAM side
-		if (other.isDataContinuous_) {
+		if (other.is_data_continuous_) {
 			memcpy(data_, other.data_, cols_ * rows_ * sizeof(float));
 		}
 		else {
 			for (size_t col = 0; col < cols_; col++) {
-				memcpy((data_ + col * rows_), other.data2D_[col], rows_ * sizeof(float));
+				memcpy((data_ + col * rows_), other.data_2D_[col], rows_ * sizeof(float));
 			}
 		}
 
-		if (other.hasWeights()) {
+		if (other.has_weights()) {
 			assert(weights_ != nullptr);
 			memcpy(weights_, other.weights_, rows_ * sizeof(float));
 		}
-		if (other.hasBias()) {
+		if (other.has_bias()) {
 			assert(bias_ != nullptr);
 			memcpy(bias_, other.bias_, rows_ * sizeof(float));
 		}
@@ -138,30 +170,30 @@ tfm::Tensor& tfm::Tensor::operator=(const Tensor& other) {
 	cols_ = other.cols_;
 	rows_ = other.rows_;
 	data_ = (float*)malloc(other.cols_ * other.rows_ * sizeof(float));
-	dataCuda_ = nullptr;
-	data2D_ = (float**)malloc(other.cols_ * sizeof(float*));
+	data_cuda_ = nullptr;
+	data_2D_ = (float**)malloc(other.cols_ * sizeof(float*));
 	weights_ = nullptr;
-	weightsCuda_ = nullptr;
+	weights_cuda_ = nullptr;
 	bias_ = nullptr;
-	biasCuda_ = nullptr;
-	isOwning_ = true;
-	isOwningCuda_ = false;
-	isDataContinuous_ = true;
+	bias_cuda_ = nullptr;
+	is_owning_ = true;
+	is_owning_cuda_ = false;
+	is_data_continuous_ = true;
 	device_ = other.device_;
 
-	if (data_ == NULL || data2D_ == NULL) {
+	if (data_ == NULL || data_2D_ == NULL) {
 		fprintf(stderr, "malloc failed");
 		exit(1);
 	}
 
-	if (other.hasWeights()) {
+	if (other.has_weights()) {
 		weights_ = (float*)malloc(rows_ * sizeof(float));
 		if (weights_ == NULL) {
 			fprintf(stderr, "malloc failed");
 			exit(1);
 		}
 	}
-	if (other.hasBias()) {
+	if (other.has_bias()) {
 		bias_ = (float*)malloc(rows_ * sizeof(float));
 		if (bias_ == NULL) {
 			fprintf(stderr, "malloc failed");
@@ -170,36 +202,36 @@ tfm::Tensor& tfm::Tensor::operator=(const Tensor& other) {
 	}
 	
 	for (size_t col = 0; col < cols_; col++) {
-		data2D_[col] = data_ + col * rows_;
+		data_2D_[col] = data_ + col * rows_;
 	}
 
-	if (device_.isCUDA()) {
-		allocateCuda();
+	if (device_.is_CUDA()) {
+		allocate_cuda();
 		// copy GPU side
-		checkCudaError(cudaMemcpy(dataCuda_, other.dataCuda_, cols_ * rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy dataCuda_");
-		if (other.hasWeights()) {
-			checkCudaError(cudaMemcpy(weightsCuda_, other.weightsCuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy weightsCuda_");
+		check_cuda_error(cudaMemcpy(data_cuda_, other.data_cuda_, cols_ * rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy data_cuda_");
+		if (other.has_weights()) {
+			check_cuda_error(cudaMemcpy(weights_cuda_, other.weights_cuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy weights_cuda_");
 		}
-		if (other.hasBias()) {
-			checkCudaError(cudaMemcpy(biasCuda_, other.biasCuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy biasCuda_");
+		if (other.has_bias()) {
+			check_cuda_error(cudaMemcpy(bias_cuda_, other.bias_cuda_, rows_ * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy bias_cuda_");
 		}
 	}
-	else {  // device_.isCPU()
+	else {  // device_.is_CPU()
 		// copy RAM side
-		if (other.isDataContinuous_) {
+		if (other.is_data_continuous_) {
 			memcpy(data_, other.data_, cols_ * rows_ * sizeof(float));
 		}
 		else {
 			for (size_t col = 0; col < cols_; col++) {
-				memcpy((data_ + col * rows_), other.data2D_[col], rows_ * sizeof(float));
+				memcpy((data_ + col * rows_), other.data_2D_[col], rows_ * sizeof(float));
 			}
 		}
 
-		if (other.hasWeights()) {
+		if (other.has_weights()) {
 			assert(weights_ != nullptr);
 			memcpy(weights_, other.weights_, rows_ * sizeof(float));
 		}
-		if (other.hasBias()) {
+		if (other.has_bias()) {
 			assert(bias_ != nullptr);
 			memcpy(bias_, other.bias_, rows_ * sizeof(float));
 		}
@@ -213,20 +245,20 @@ tfm::Tensor::Tensor(tfm::Tensor&& other) noexcept :
 	cols_(other.cols_),
 	rows_(other.rows_),
 	data_(other.data_),
-	dataCuda_(other.dataCuda_),
-	data2D_(other.data2D_),
+	data_cuda_(other.data_cuda_),
+	data_2D_(other.data_2D_),
 	weights_(other.weights_),
-	weightsCuda_(other.weightsCuda_),
+	weights_cuda_(other.weights_cuda_),
 	bias_(other.bias_),
-	biasCuda_(other.biasCuda_),
-	isOwning_(other.isOwning_),
-	isOwningCuda_(other.isOwningCuda_),
-	isDataContinuous_(other.isDataContinuous_),
+	bias_cuda_(other.bias_cuda_),
+	is_owning_(other.is_owning_),
+	is_owning_cuda_(other.is_owning_cuda_),
+	is_data_continuous_(other.is_data_continuous_),
 	device_(other.device_) {
 
-	other.data2D_ = nullptr;
-	other.isOwning_ = false;
-	other.isOwningCuda_ = false;
+	other.data_2D_ = nullptr;
+	other.is_owning_ = false;
+	other.is_owning_cuda_ = false;
 	other.cleanup();
 }
 
@@ -238,102 +270,102 @@ tfm::Tensor& tfm::Tensor::operator=(tfm::Tensor&& other) noexcept {
 	cols_ = other.cols_;
 	rows_ = other.rows_;
 	data_ = other.data_;
-	dataCuda_ = other.dataCuda_;
-	data2D_ = other.data2D_;
+	data_cuda_ = other.data_cuda_;
+	data_2D_ = other.data_2D_;
 	weights_ = other.weights_;
-	weightsCuda_ = other.weightsCuda_;
+	weights_cuda_ = other.weights_cuda_;
 	bias_ = other.bias_;
-	biasCuda_ = other.biasCuda_;
-	isOwning_ = other.isOwning_;
-	isOwningCuda_ = other.isOwningCuda_;
-	isDataContinuous_ = other.isDataContinuous_;
+	bias_cuda_ = other.bias_cuda_;
+	is_owning_ = other.is_owning_;
+	is_owning_cuda_ = other.is_owning_cuda_;
+	is_data_continuous_ = other.is_data_continuous_;
 	device_ = other.device_;
 
-	other.data2D_ = nullptr;
-	other.isOwning_ = false;
-	other.isOwningCuda_ = false;
+	other.data_2D_ = nullptr;
+	other.is_owning_ = false;
+	other.is_owning_cuda_ = false;
 	other.cleanup();
 
 	return *this;
 }
 
 
-tfm::Tensor tfm::Tensor::nonOwningCopy() const {
+tfm::Tensor tfm::Tensor::non_owning_copy() const {
 	tfm::Tensor v;
 
 	v.cols_ = cols_;
 	v.rows_ = rows_;
 	v.data_ = data_;
-	v.dataCuda_ = dataCuda_;
-	v.data2D_ = (float**)malloc(v.cols_ * sizeof(float*));
+	v.data_cuda_ = data_cuda_;
+	v.data_2D_ = (float**)malloc(v.cols_ * sizeof(float*));
 	v.weights_ = weights_;
-	v.weightsCuda_ = weightsCuda_;
+	v.weights_cuda_ = weights_cuda_;
 	v.bias_ = bias_;
-	v.biasCuda_ = biasCuda_;
-	v.isOwning_ = false;
-	v.isOwningCuda_ = false;
-	v.isDataContinuous_ = isDataContinuous_;
+	v.bias_cuda_ = bias_cuda_;
+	v.is_owning_ = false;
+	v.is_owning_cuda_ = false;
+	v.is_data_continuous_ = is_data_continuous_;
 	v.device_ = device_;
 
-	if (v.data2D_ == NULL) {
+	if (v.data_2D_ == NULL) {
 		fprintf(stderr, "malloc failed");
 		exit(1);
 	}
 
 	for (size_t col = 0; col < cols_; col++) {
-		v.data2D_[col] = data2D_[col];
+		v.data_2D_[col] = data_2D_[col];
 	}
 
 	return v;
 }
 
 
-tfm::Tensor tfm::Tensor::nonOwningCopy(const std::vector<size_t>& colIds) const {
-	tfm::Tensor v = nonOwningCopy();
-	v.isDataContinuous_ = false;
-	if (v.cols_ != colIds.size()) {
-		v.cols_ = colIds.size();
-		float** data2Dnew = (float**)realloc((void*)v.data2D_, v.cols_ * sizeof(float*));
-		if (data2Dnew == NULL) {
+tfm::Tensor tfm::Tensor::non_owning_copy(const std::vector<size_t>& col_ids) const {
+	tfm::Tensor v = non_owning_copy();
+	v.is_data_continuous_ = false;
+	if (v.cols_ != col_ids.size()) {
+		v.cols_ = col_ids.size();
+		float** data_2D_new = (float**)realloc((void*)v.data_2D_, v.cols_ * sizeof(float*));
+		if (data_2D_new == NULL) {
 			fprintf(stderr, "realloc failed");
 			exit(1);
 		}
-		v.data2D_ = data2Dnew;
+		v.data_2D_ = data_2D_new;
 	}
 
 	for (size_t col = 0; col < v.cols(); col++) {
-		v.data2D_[col] = data2D_[colIds[col]];
+		v.data_2D_[col] = data_2D_[col_ids[col]];
 	}
 
 	return v;
 }
 
 
-tfm::Tensor tfm::Tensor::nonOwningCopy(size_t cols, size_t colOffset) const {
-	tfm::Tensor v = nonOwningCopy();
+tfm::Tensor tfm::Tensor::non_owning_copy(size_t cols, size_t col_offset) const {
+	tfm::Tensor v = non_owning_copy();
 
-	if (colOffset + cols > cols_) {
-		fprintf(stderr, "colOffset + cols can't be larger than column count of this matrix");
+	if (col_offset + cols > cols_) {
+		fprintf(stderr, "col_offset + cols can't be larger than column count of this matrix");
 		exit(1);
 	}
 
 	v.cols_ = cols;
-	v.data_ = data_ + rows_ * colOffset;
-	if (isOwningCuda_) {
-		v.dataCuda_ = colData(colOffset);
+	v.data_ = data_ + rows_ * col_offset;
+	if (is_owning_cuda_) {
+		v.data_cuda_ = col_data(col_offset);
 	}
 
 	for (size_t col = 0; col < cols; col++) {
-		data2D_[col] = data2D_[colOffset + col];
+		data_2D_[col] = data_2D_[col_offset + col];
 	}
 
 	return v;
 }
 
 
-void tfm::Tensor::initWeights() {
-	Device origDevice = device_;
-	moveTo(Device(tfm::DeviceType::CPU));
+void tfm::Tensor::init_weights() {
+	Device orig_device = device_;
+	move_to(Device(tfm::DeviceType::CPU));
 
 	if (weights_ == nullptr) {
 		weights_ = (float*)malloc(rows_ * sizeof(float));
@@ -345,13 +377,13 @@ void tfm::Tensor::initWeights() {
 
 	std::fill(weights_, weights_ + rows_, 1.0f);
 
-	moveTo(origDevice);
+	move_to(orig_device);
 }
 
 
-void tfm::Tensor::initBias() {
-	Device origDevice = device_;
-	moveTo(Device(tfm::DeviceType::CPU));
+void tfm::Tensor::init_bias() {
+	Device orig_device = device_;
+	move_to(Device(tfm::DeviceType::CPU));
 
 	if (bias_ == nullptr) {
 		bias_ = (float*)malloc(rows_ * sizeof(float));
@@ -363,94 +395,94 @@ void tfm::Tensor::initBias() {
 
 	std::fill(bias_, bias_ + rows_, 0.0f);
 
-	moveTo(origDevice);
+	move_to(orig_device);
 }
 
 
-void tfm::Tensor::moveTo(Device newDevice){
-	if (device_ == newDevice) {
+void tfm::Tensor::move_to(Device new_device){
+	if (device_ == new_device) {
 		return;
 	}
 
-	if (device_.isCPU() && newDevice.isCUDA()) {
-		device_ = newDevice;
-		allocateCuda();
+	if (device_.is_CPU() && new_device.is_CUDA()) {
+		device_ = new_device;
+		allocate_cuda();
 
-		if (isDataContinuous_) {
-			checkCudaError(cudaMemcpy((void*)dataCuda_, (const void*)data_, cols_ * rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
+		if (is_data_continuous_) {
+			check_cuda_error(cudaMemcpy((void*)data_cuda_, (const void*)data_, cols_ * rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
 		}
 		else {
 			for (size_t col = 0; col < cols_; col++) {
-				checkCudaError(cudaMemcpy((void*)(dataCuda_ + col * rows_), (const void*)data2D_[col], rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
+				check_cuda_error(cudaMemcpy((void*)(data_cuda_ + col * rows_), (const void*)data_2D_[col], rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
 			}
 		}
 
-		if (hasWeights()) {
-			checkCudaError(cudaMemcpy((void*)weightsCuda_, (const void*)weights_, rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
+		if (has_weights()) {
+			check_cuda_error(cudaMemcpy((void*)weights_cuda_, (const void*)weights_, rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
 		}
-		if (hasBias()) {
-			checkCudaError(cudaMemcpy((void*)biasCuda_, (const void*)bias_, rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
+		if (has_bias()) {
+			check_cuda_error(cudaMemcpy((void*)bias_cuda_, (const void*)bias_, rows_ * sizeof(float), cudaMemcpyHostToDevice), "Copy to device failed");
 		}
 	}
-	else if (device_.isCUDA() && newDevice.isCPU()) {
-		setDevice();
-		if (!isOwning_) {
+	else if (device_.is_CUDA() && new_device.is_CPU()) {
+		set_device();
+		if (!is_owning_) {
 			allocate();
 		}
 
-		checkCudaError(cudaMemcpy((void*)data_, (const void*)dataCuda_, cols_ * rows_ * sizeof(float), cudaMemcpyDeviceToHost), "Copy to host failed");
-		if (hasWeights()) {
-			checkCudaError(cudaMemcpy((void*)weights_, (const void*)weightsCuda_, rows_ * sizeof(float), cudaMemcpyDeviceToHost), "Copy to host failed");
+		check_cuda_error(cudaMemcpy((void*)data_, (const void*)data_cuda_, cols_ * rows_ * sizeof(float), cudaMemcpyDeviceToHost), "Copy to host failed");
+		if (has_weights()) {
+			check_cuda_error(cudaMemcpy((void*)weights_, (const void*)weights_cuda_, rows_ * sizeof(float), cudaMemcpyDeviceToHost), "Copy to host failed");
 		}
-		if (hasBias()) {
-			checkCudaError(cudaMemcpy((void*)bias_, (const void*)biasCuda_, rows_ * sizeof(float), cudaMemcpyDeviceToHost), "Copy to host failed");
+		if (has_bias()) {
+			check_cuda_error(cudaMemcpy((void*)bias_, (const void*)bias_cuda_, rows_ * sizeof(float), cudaMemcpyDeviceToHost), "Copy to host failed");
 		}
 
-		deallocateCuda();
-		device_ = newDevice;
-		isOwning_ = true;
-		isDataContinuous_ = true;
+		deallocate_cuda();
+		device_ = new_device;
+		is_owning_ = true;
+		is_data_continuous_ = true;
 	}
 	else {  // CUDA to CUDA
-		float* prevDataCUDA = dataCuda_;
-		float* prevWeightsCUDA = weightsCuda_;
-		float* prevBiasCUDA = biasCuda_;
-		bool prevIsOwningCUDA = isOwningCuda_;
-		tfm::Device prevDevice = device_;
+		float* prev_data_cuda = data_cuda_;
+		float* prev_weights_cuda = weights_cuda_;
+		float* prev_bias_cuda = bias_cuda_;
+		bool prev_is_owning_cuda = is_owning_cuda_;
+		tfm::Device prev_device = device_;
 
-		device_ = newDevice;
-		allocateCuda();
+		device_ = new_device;
+		allocate_cuda();
 
-		checkCudaError(cudaMemcpyPeer((void*)dataCuda_, device_.index(), (const void*)prevDataCUDA, prevDevice.index(), cols_ * rows_ * sizeof(float)), "Copy to device failed");
-		if (hasWeights()) {
-			checkCudaError(cudaMemcpyPeer((void*)weightsCuda_, device_.index(), (const void*)prevWeightsCUDA, prevDevice.index(), rows_ * sizeof(float)), "Copy to device failed");
+		check_cuda_error(cudaMemcpyPeer((void*)data_cuda_, device_.index(), (const void*)prev_data_cuda, prev_device.index(), cols_ * rows_ * sizeof(float)), "Copy to device failed");
+		if (has_weights()) {
+			check_cuda_error(cudaMemcpyPeer((void*)weights_cuda_, device_.index(), (const void*)prev_weights_cuda, prev_device.index(), rows_ * sizeof(float)), "Copy to device failed");
 		}
-		if (hasBias()) {
-			checkCudaError(cudaMemcpyPeer((void*)biasCuda_, device_.index(), (const void*)prevBiasCUDA, prevDevice.index(), rows_ * sizeof(float)), "Copy to device failed");
+		if (has_bias()) {
+			check_cuda_error(cudaMemcpyPeer((void*)bias_cuda_, device_.index(), (const void*)prev_bias_cuda, prev_device.index(), rows_ * sizeof(float)), "Copy to device failed");
 		}
 
 		// switch to old members to deallocate previous memory
-		float* newDataCUDA = dataCuda_;
-		float* newWeightsCUDA = weightsCuda_;
-		float* newBiasCUDA = biasCuda_;
-		dataCuda_ = prevDataCUDA;
-		weightsCuda_ = prevWeightsCUDA;
-		biasCuda_ = prevBiasCUDA;
-		device_ = prevDevice;
-		isOwningCuda_ = prevIsOwningCUDA;
+		float* new_data_cuda = data_cuda_;
+		float* new_weights_cuda = weights_cuda_;
+		float* new_bias_cuda = bias_cuda_;
+		data_cuda_ = prev_data_cuda;
+		weights_cuda_ = prev_weights_cuda;
+		bias_cuda_ = prev_bias_cuda;
+		device_ = prev_device;
+		is_owning_cuda_ = prev_is_owning_cuda;
 
-		deallocateCuda();
+		deallocate_cuda();
 
-		dataCuda_ = newDataCUDA;
-		weightsCuda_ = newWeightsCUDA;
-		biasCuda_ = newBiasCUDA;
-		device_ = newDevice;
-		isOwningCuda_ = true;
+		data_cuda_ = new_data_cuda;
+		weights_cuda_ = new_weights_cuda;
+		bias_cuda_ = new_bias_cuda;
+		device_ = new_device;
+		is_owning_cuda_ = true;
 	}
 }
 
 
-int tfm::Tensor::saveToPath(const std::string& path) const {
+int tfm::Tensor::save_to_path(const std::string& path) const {
 	std::ofstream file;
 	file.open(path, std::ios::out | std::ios::binary);
 	if (!file.is_open()) {
@@ -458,16 +490,16 @@ int tfm::Tensor::saveToPath(const std::string& path) const {
 		exit(1);
 	}
 
-	Device origDevice = device_;
-	const_cast<tfm::Tensor*>(this)->moveTo(Device(tfm::DeviceType::CPU));
+	Device orig_device = device_;
+	const_cast<tfm::Tensor*>(this)->move_to(Device(tfm::DeviceType::CPU));
 
 	for (size_t col = 0; col < cols(); col++) {
 		for (size_t row = 0; row < rows(); row++) {
-			file.write(reinterpret_cast<const char*>(&data2D_[col][row]), sizeof(float));
+			file.write(reinterpret_cast<const char*>(&data_2D_[col][row]), sizeof(float));
 		}
 	}
 
-	if (hasWeights() && hasBias()) {
+	if (has_weights() && has_bias()) {
 		for (size_t row = 0; row < rows(); row++) {
 			file.write(reinterpret_cast<const char*>(&weights_[row]), sizeof(float));
 		}
@@ -477,12 +509,12 @@ int tfm::Tensor::saveToPath(const std::string& path) const {
 	}
 
 	file.close();
-	const_cast<tfm::Tensor*>(this)->moveTo(origDevice);
+	const_cast<tfm::Tensor*>(this)->move_to(orig_device);
 	return 0;
 }
 
 
-int tfm::Tensor::loadFromPath(const std::string& path, bool loadWeightsAndBias) {
+int tfm::Tensor::load_from_path(const std::string& path, bool load_weights_and_bias) {
 	std::ifstream file;
 	file.open(path, std::ios::in | std::ios::binary);
 	if (!file.good()) {
@@ -493,24 +525,24 @@ int tfm::Tensor::loadFromPath(const std::string& path, bool loadWeightsAndBias) 
 		exit(1);
 	}
 
-	Device origDevice = device_;
-	moveTo(Device(tfm::DeviceType::CPU));
+	Device orig_device = device_;
+	move_to(Device(tfm::DeviceType::CPU));
 
 	for (size_t col = 0; col < cols(); col++) {
 		for (size_t row = 0; row < rows(); row++) {
-			file.read(reinterpret_cast<char*>(&data2D_[col][row]), sizeof(float));
+			file.read(reinterpret_cast<char*>(&data_2D_[col][row]), sizeof(float));
 		}
 	}
 
-	if (loadWeightsAndBias) {
-		if (!hasWeights()) {
+	if (load_weights_and_bias) {
+		if (!has_weights()) {
 			weights_ = (float*)malloc(rows_ * sizeof(float));
 			if (weights_ == NULL) {
 				fprintf(stderr, "malloc failed");
 				exit(1);
 			}
 		}
-		if (!hasBias()) {
+		if (!has_bias()) {
 			bias_ = (float*)malloc(rows_ * sizeof(float));
 			if (bias_ == NULL) {
 				fprintf(stderr, "malloc failed");
@@ -527,14 +559,14 @@ int tfm::Tensor::loadFromPath(const std::string& path, bool loadWeightsAndBias) 
 	}
 
 	file.close();
-	moveTo(origDevice);
+	move_to(orig_device);
 	return 0;
 }
 
 
 void tfm::Tensor::allocate() {
-	isOwning_ = true;
-	isDataContinuous_ = true;
+	is_owning_ = true;
+	is_data_continuous_ = true;
 
 	data_ = (float*)malloc(cols_ * rows_ * sizeof(float));
 
@@ -543,14 +575,14 @@ void tfm::Tensor::allocate() {
 		exit(1);
 	}
 
-	if (hasWeights()) {
+	if (has_weights()) {
 		weights_ = (float*)malloc(rows_ * sizeof(float));
 		if (weights_ == NULL) {
 			fprintf(stderr, "malloc failed");
 			exit(1);
 		}
 	}
-	if (hasBias()) {
+	if (has_bias()) {
 		bias_ = (float*)malloc(rows_ * sizeof(float));
 		if (bias_ == NULL) {
 			fprintf(stderr, "malloc failed");
@@ -559,68 +591,68 @@ void tfm::Tensor::allocate() {
 	}
 
 	for (size_t col = 0; col < cols_; col++) {
-		data2D_[col] = data_ + col * rows_;
+		data_2D_[col] = data_ + col * rows_;
 	}
 }
 
 
 void tfm::Tensor::deallocate() {
-	if (isOwning_) {
+	if (is_owning_) {
 		std::free(data_);
 		std::free(weights_);
 		std::free(bias_);
 	}
-	isOwning_ = false;
+	is_owning_ = false;
 }
 
 
-void tfm::Tensor::setDevice() {
-	checkCudaError(cudaSetDevice(device_.index()), "Failed to set device");
+void tfm::Tensor::set_device() {
+	check_cuda_error(cudaSetDevice(device_.index()), "Failed to set device");
 }
 
 
-void tfm::Tensor::deallocateCuda() {
-	if (isOwningCuda_) {
-		setDevice();
-		cudaFree(dataCuda_);
-		cudaFree(weightsCuda_);
-		cudaFree(biasCuda_);
+void tfm::Tensor::deallocate_cuda() {
+	if (is_owning_cuda_) {
+		set_device();
+		cudaFree(data_cuda_);
+		cudaFree(weights_cuda_);
+		cudaFree(bias_cuda_);
 	}
-	isOwningCuda_ = false;
+	is_owning_cuda_ = false;
 }
 
 
-void tfm::Tensor::allocateCuda() {
-	isOwningCuda_ = true;
-	setDevice();
+void tfm::Tensor::allocate_cuda() {
+	is_owning_cuda_ = true;
+	set_device();
 
-	checkCudaError(cudaMalloc((void**)&dataCuda_, cols_ * rows_ * sizeof(float)), "Failed to allocate device memory");
+	check_cuda_error(cudaMalloc((void**)&data_cuda_, cols_ * rows_ * sizeof(float)), "Failed to allocate device memory");
 	
-	if (hasWeights()) {
-		checkCudaError(cudaMalloc((void**)&weightsCuda_, rows_ * sizeof(float)), "Failed to allocate device memory");
+	if (has_weights()) {
+		check_cuda_error(cudaMalloc((void**)&weights_cuda_, rows_ * sizeof(float)), "Failed to allocate device memory");
 	}
-	if (hasBias()) {
-		checkCudaError(cudaMalloc((void**)&biasCuda_, rows_ * sizeof(float)), "Failed to allocate device memory");
+	if (has_bias()) {
+		check_cuda_error(cudaMalloc((void**)&bias_cuda_, rows_ * sizeof(float)), "Failed to allocate device memory");
 	}
 }
 
 
 void tfm::Tensor::cleanup() {
 	deallocate();
-	deallocateCuda();
-	std::free(data2D_);
+	deallocate_cuda();
+	std::free(data_2D_);
 
 	cols_ = 0;
 	rows_ = 0;
 	data_ = nullptr;
-	dataCuda_ = nullptr;
-	data2D_ = nullptr;
+	data_cuda_ = nullptr;
+	data_2D_ = nullptr;
 	weights_ = nullptr;
-	weightsCuda_ = nullptr;
+	weights_cuda_ = nullptr;
 	bias_ = nullptr;
-	biasCuda_ = nullptr;
-	isOwning_ = false;
-	isOwningCuda_ = false;
-	isDataContinuous_ = false;
+	bias_cuda_ = nullptr;
+	is_owning_ = false;
+	is_owning_cuda_ = false;
+	is_data_continuous_ = false;
 	device_ = tfm::DeviceType::CPU;
 }

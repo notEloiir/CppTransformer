@@ -6,7 +6,7 @@
 #include "cuda_utils.h"
 
 
-void checkCudaError(cudaError_t result, const char* msg) {
+void check_cuda_error(cudaError_t result, const char* msg) {
 	if (result != cudaSuccess) {
 		fprintf(stderr, "%s: %s", msg, cudaGetErrorString(result));
 		exit(1);
@@ -14,7 +14,7 @@ void checkCudaError(cudaError_t result, const char* msg) {
 }
 
 
-void checkCublasError(cublasStatus_t result, const char* msg) {
+void check_cublas_error(cublasStatus_t result, const char* msg) {
 	if (result != CUBLAS_STATUS_SUCCESS) {
 		fprintf(stderr, "%s: %s", msg, result);
 		exit(1);

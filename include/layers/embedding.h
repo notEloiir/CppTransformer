@@ -6,26 +6,23 @@
 #include <tensor/tensor.h>
 
 
-namespace tfm
-{
+namespace tfm {
 
 class Embedding {
 public:
 	Embedding(size_t vocab_size, size_t d_model, std::string filename);
 
-	// Convert tokens to their embeddings
 	const tfm::Tensor forward(const std::vector<uint32_t>& tokens);
-	const tfm::Tensor output() const { return output_.nonOwningCopy(); }
+	const tfm::Tensor output() const { return output_.non_owning_copy(); }
 
 	void save() const;
 
 private:
-	size_t vocab_size;
-	size_t d_model;
-	tfm::Tensor embedding_matrix;
+	size_t vocab_size_;
+	size_t d_model_;
+	tfm::Tensor embedding_matrix_;
 	tfm::Tensor output_;
-	std::string filename;
+	std::string filename_;
 };
-
 
 }

@@ -17,8 +17,8 @@ TEST_CASE("CUDA tensor addition") {
 		expected[i / expected.rows()][i % expected.rows()] = i * i + 2.0f * i - 5.0f;
 	}
 
-	tfm::Tensor res = cudaMatAdd(t0, t1);
-	res.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	tfm::Tensor res = cuda_mat_add_BLAS3(t0, t1);
+	res.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t0.cols() * t0.rows(); i++) {
 		CHECK_EQ(res[i / res.rows()][i % res.rows()], expected[i / expected.rows()][i % expected.rows()]);
@@ -35,18 +35,18 @@ TEST_CASE("CUDA tensor multiplication") {
 		t1[i % t1.cols()][i / t1.cols()] = i;
 	}
 
-	CHECK_THROWS(cudaMatMult(t0, t1, false, false));
-	CHECK_THROWS(cudaMatMult(t0, t1, false, true));
-	CHECK_NOTHROW(cudaMatMult(t0, t1, true, false));
-	CHECK_THROWS(cudaMatMult(t0, t1, true, true));
+	CHECK_THROWS(cuda_mat_mult_BLAS3(t0, t1, false, false));
+	CHECK_THROWS(cuda_mat_mult_BLAS3(t0, t1, false, true));
+	CHECK_NOTHROW(cuda_mat_mult_BLAS3(t0, t1, true, false));
+	CHECK_THROWS(cuda_mat_mult_BLAS3(t0, t1, true, true));
 
 	expected[0][0] = 20.0f;
 	expected[1][0] = 23.0f;
 	expected[2][0] = 26.0f;
 	expected[3][0] = 29.0f;
 
-	tfm::Tensor res = cudaMatMult(t0, t1, true, false);
-	res.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	tfm::Tensor res = cuda_mat_mult_BLAS3(t0, t1, true, false);
+	res.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	CHECK_EQ(res.cols(), expected.cols());
 	CHECK_EQ(res.rows(), expected.rows());
@@ -57,8 +57,8 @@ TEST_CASE("CUDA tensor multiplication") {
 }
 TEST_CASE("CUDA tensor normalization") {
 	tfm::Tensor t(2, 3, tfm::Device(tfm::DeviceType::CPU));
-	t.initWeights();
-	t.initBias();
+	t.init_weights();
+	t.init_bias();
 	tfm::Tensor expected(2, 3, tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
@@ -72,8 +72,8 @@ TEST_CASE("CUDA tensor normalization") {
 	expected[1][1] = 1.0f;
 	expected[1][2] = 1.0f;
 
-	cudaNormalizeMatrix(t);
-	t.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	cuda_normalize_matrix(t);
+	t.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(t[i / t.rows()][i % t.rows()], doctest::Approx(expected[i / expected.rows()][i % expected.rows()]));
@@ -99,8 +99,8 @@ TEST_CASE("CUDA tensor normalization") {
 	expected[1][1] = -5.7f;
 	expected[1][2] = 3.0f;
 
-	cudaNormalizeMatrix(t);
-	t.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	cuda_normalize_matrix(t);
+	t.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(t[i / t.rows()][i % t.rows()], doctest::Approx(expected[i / expected.rows()][i % expected.rows()]));
@@ -121,8 +121,8 @@ TEST_CASE("CUDA tensor ReLU") {
 	expected[1][1] = 0.0f;
 	expected[1][2] = 0.0f;
 
-	cudaReLU(t);
-	t.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	cuda_ReLU(t);
+	t.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(t[i / t.rows()][i % t.rows()], doctest::Approx(expected[i / expected.rows()][i % expected.rows()]));
@@ -134,9 +134,9 @@ TEST_CASE("CUDA tensor BLAS1") {
 		t[i % t.cols()][i / t.cols()] = i;
 	}
 
-	tfm::Tensor res = cudaMatMultBLAS1(t, 2.5f);
-	t.moveTo(tfm::Device(tfm::DeviceType::CPU));
-	res.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	tfm::Tensor res = cuda_mat_mult_BLAS1(t, 2.5f);
+	t.move_to(tfm::Device(tfm::DeviceType::CPU));
+	res.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(res[i / res.rows()][i % res.rows()], doctest::Approx(2.5f * t[i / t.rows()][i % t.rows()]));
@@ -157,8 +157,8 @@ TEST_CASE("CUDA tensor softmax") {
 	expected[1][1] = 0.000123f;
 	expected[1][2] = 0.999876f;
 
-	cudaSoftmax(t);
-	t.moveTo(tfm::Device(tfm::DeviceType::CPU));
+	cuda_softmax(t);
+	t.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(t[i / t.rows()][i % t.rows()], doctest::Approx(expected[i / expected.rows()][i % expected.rows()]));

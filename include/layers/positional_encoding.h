@@ -5,20 +5,18 @@
 #include <tensor/tensor.h>
 
 
-namespace tfm
-{
+namespace tfm {
 
-	class PositionalEncoding {
-	public:
-		PositionalEncoding(size_t max_seq_len, size_t d_model);
+class PositionalEncoding {
+public:
+	PositionalEncoding(size_t max_seq_len, size_t d_model);
 
-		tfm::Tensor forward(const tfm::Tensor& token_embeddings);
+	tfm::Tensor forward(const tfm::Tensor& token_embeddings);
 
-	private:
-		size_t max_seq_len;
-		size_t d_model;
-		tfm::Tensor positional_encoding_matrix;
-	};
-
+private:
+	size_t max_seq_len_;
+	size_t d_model_;
+	tfm::Tensor positional_encoding_matrix_;
+};
 
 }

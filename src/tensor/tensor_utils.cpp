@@ -46,12 +46,12 @@ tfm::Tensor tfm::Tensor::concatenate(const std::vector<tfm::Tensor>& tensors, si
 
 	tfm::Tensor t(cols, rows, tensors[0].device());
 
-	if (t.device().isCUDA()) {
+	if (t.device().is_CUDA()) {
 		// copy GPU side
 		if (dim == 0) {
 			size_t start_pos = 0;
 			for (size_t i = 0; i < tensors.size(); i++) {
-				checkCudaError(cudaMemcpy(t.data() + start_pos , tensors[i].data(), tensors[i].cols() * tensors[i].rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
+				check_cuda_error(cudaMemcpy(t.data() + start_pos , tensors[i].data(), tensors[i].cols() * tensors[i].rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
 				start_pos += tensors[i].cols() * tensors[i].rows();
 			}
 		}
@@ -59,23 +59,23 @@ tfm::Tensor tfm::Tensor::concatenate(const std::vector<tfm::Tensor>& tensors, si
 			size_t row_start = 0;
 			for (size_t i = 0; i < tensors.size(); i++) {
 				for (size_t col = 0; col < tensors[i].cols(); col++) {
-					checkCudaError(cudaMemcpy(t.data() + t.rows() * col + row_start, tensors[i].data() + tensors[i].rows() * col, tensors[i].rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
+					check_cuda_error(cudaMemcpy(t.data() + t.rows() * col + row_start, tensors[i].data() + tensors[i].rows() * col, tensors[i].rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
 				}
 				row_start += tensors[i].rows();
 			}
 		}
 	}
-	else {  // device_.isCPU()
+	else {  // device_.is_CPU()
 		// copy RAM side
 		if (dim == 0) {
 			size_t start_pos = 0;
 			for (size_t i = 0; i < tensors.size(); i++) {
-				if (tensors[i].isDataContinuous_) {
+				if (tensors[i].is_data_continuous_) {
 					memcpy(t.data() + start_pos, tensors[i].data(), tensors[i].cols() * tensors[i].rows() * sizeof(float));
 				}
 				else {
 					for (size_t col = 0; col < tensors[i].cols(); col++) {
-						memcpy(t.data() + start_pos + col * t.rows(), tensors[i].colData(col), tensors[i].rows() * sizeof(float));
+						memcpy(t.data() + start_pos + col * t.rows(), tensors[i].col_data(col), tensors[i].rows() * sizeof(float));
 					}
 				}
 				start_pos += tensors[i].cols() * tensors[i].rows();
@@ -85,7 +85,7 @@ tfm::Tensor tfm::Tensor::concatenate(const std::vector<tfm::Tensor>& tensors, si
 			size_t row_start = 0;
 			for (size_t i = 0; i < tensors.size(); i++) {
 				for (size_t col = 0; col < tensors[i].cols(); col++) {
-					memcpy(t.data() + row_start + col * t.rows(), tensors[i].colData(col), tensors[i].rows() * sizeof(float));
+					memcpy(t.data() + row_start + col * t.rows(), tensors[i].col_data(col), tensors[i].rows() * sizeof(float));
 				}
 				row_start += tensors[i].rows();
 			}
@@ -97,24 +97,24 @@ tfm::Tensor tfm::Tensor::concatenate(const std::vector<tfm::Tensor>& tensors, si
 
 
 
-tfm::Tensor tfm::Tensor::subtensor(const tfm::Tensor& other, size_t cols, size_t rows, size_t colOffset, size_t rowOffset) {
-	if (colOffset + cols > other.cols() || rowOffset + rows > other.rows()) {
-		fprintf(stderr, "colOffset + cols > other.cols() || rowOffset + rows > other.rows()");
+tfm::Tensor tfm::Tensor::subtensor(const tfm::Tensor& other, size_t cols, size_t rows, size_t col_offset, size_t row_offset) {
+	if (col_offset + cols > other.cols() || row_offset + rows > other.rows()) {
+		fprintf(stderr, "col_offset + cols > other.cols() || row_offset + rows > other.rows()");
 		exit(EXIT_FAILURE);
 	}
 
 	tfm::Tensor t(cols, rows, other.device());
 
-	if (t.device().isCUDA()) {
+	if (t.device().is_CUDA()) {
 		// copy GPU side
 		for (size_t col = 0; col < cols; col++) {
-			checkCudaError(cudaMemcpy(t.data() + rows * col, other.data() + other.rows() * (col + colOffset) + rowOffset, rows * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
+			check_cuda_error(cudaMemcpy(t.data() + rows * col, other.data() + other.rows() * (col + col_offset) + row_offset, rows * sizeof(float), cudaMemcpyDeviceToDevice), "Failed to copy CUDA data");
 		}
 	}
-	else {  // device_.isCPU()
+	else {  // device_.is_CPU()
 		// copy RAM side
 		for (size_t col = 0; col < cols; col++) {
-			memcpy(t.data() + rows * col, other.colData(col + colOffset) + rowOffset, rows * sizeof(float));
+			memcpy(t.data() + rows * col, other.col_data(col + col_offset) + row_offset, rows * sizeof(float));
 		}
 	}
 
@@ -123,38 +123,38 @@ tfm::Tensor tfm::Tensor::subtensor(const tfm::Tensor& other, size_t cols, size_t
 
 
 float* tfm::Tensor::data() const {
-	if (device_.isCPU()) {
+	if (device_.is_CPU()) {
 		return data_;
 	}
 	else {
-		return dataCuda_;
+		return data_cuda_;
 	}
 }
 
-float* tfm::Tensor::colData(size_t col) const {
-	if (device_.isCPU()) {
-		return data2D_[col];
+float* tfm::Tensor::col_data(size_t col) const {
+	if (device_.is_CPU()) {
+		return data_2D_[col];
 	}
 	else {
-		return dataCuda_ + col * rows_;
+		return data_cuda_ + col * rows_;
 	}
 }
 
 float* tfm::Tensor::weights() const {
-	if (device_.isCPU()) {
+	if (device_.is_CPU()) {
 		return weights_;
 	}
 	else {
-		return weightsCuda_;
+		return weights_cuda_;
 	}
 }
 
 float* tfm::Tensor::bias() const {
-	if (device_.isCPU()) {
+	if (device_.is_CPU()) {
 		return bias_;
 	}
 	else {
-		return biasCuda_;
+		return bias_cuda_;
 	}
 }
 

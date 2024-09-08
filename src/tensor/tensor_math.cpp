@@ -9,114 +9,171 @@
 #include <backend/cpu/cpu_matrix_math.h>
 
 
-void tfm::Tensor::zeroes() {
-	if (isDataContinuous_) {
-		std::fill(data_, data_ + cols_ * rows_, 0.0f);
+void tfm::Tensor::fill(float val) {
+	tfm::Device dev = device_;
+	move_to(tfm::Device(tfm::DeviceType::CPU));
+
+	if (is_data_continuous_) {
+		std::fill(data_, data_ + cols_ * rows_, val);
 	}
 	else {
 		for (size_t col = 0; col < cols(); col++) {
-			std::fill(data2D_[col], data2D_[col] + rows_, 0.0f);
+			std::fill(data_2D_[col], data_2D_[col] + rows_, val);
 		}
 	}
-}
 
-
-void tfm::Tensor::ones() {
-	if (isDataContinuous_) {
-		std::fill(data_, data_ + cols_ * rows_, 1.0f);
-	}
-	else {
-		for (size_t col = 0; col < cols(); col++) {
-			std::fill(data2D_[col], data2D_[col] + rows_, 1.0f);
-		}
-	}
-}
-
-
-void tfm::Tensor::diag() {
-	zeroes();
-	for (size_t i = 0; i < cols() && i < rows(); i++) {
-		data2D_[i][i] = 1.0f;
-	}
+	move_to(dev);
 }
 
 
 void tfm::Tensor::random() {
+	tfm::Device dev = device_;
+	move_to(tfm::Device(tfm::DeviceType::CPU));
+
 	for (size_t col = 0; col < cols(); col++) {
 		for (size_t row = 0; row < rows(); row++) {
-			data2D_[col][row] = -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2));
+			data_2D_[col][row] = -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2));
 		}
 	}
+	
+	move_to(dev);
 }
 
 
 void tfm::Tensor::normalize() {
-	if (tfm::Device::deviceCount > 0) {
-		cudaNormalizeMatrix(*this);
+	if (tfm::Device::device_count > 0) {
+		cuda_normalize_matrix(*this);
 	}
 	else {
-		cpuNormalizeMatrix(*this);
+		cpu_normalize_matrix(*this);
 	}
 }
 
 
 void tfm::Tensor::ReLU() {
-	if (tfm::Device::deviceCount > 0) {
-		cudaReLU(*this);
+	if (tfm::Device::device_count > 0) {
+		cuda_ReLU(*this);
 	}
 	else {
-		cpuReLU(*this);
+		cpu_ReLU(*this);
+	}
+}
+
+
+void tfm::Tensor::ReLU_derivative() {
+	if (tfm::Device::device_count > 0) {
+		cuda_ReLU_derivative(*this);
+	}
+	else {
+		cpu_ReLU_derivative(*this);
 	}
 }
 
 
 void tfm::Tensor::softmax() {
-	if (tfm::Device::deviceCount > 0) {
-		cudaSoftmax(*this);
+	if (tfm::Device::device_count > 0) {
+		cuda_softmax(*this);
 	}
 	else {
-		cpuSoftmax(*this);
+		cpu_softmax(*this);
+	}
+}
+
+
+void tfm::Tensor::sq() {
+	if (tfm::Device::device_count > 0) {
+		cuda_sq(*this);
+	}
+	else {
+		cpu_sq(*this);
+	}
+}
+
+
+void tfm::Tensor::sqrt() {
+	if (tfm::Device::device_count > 0) {
+		cuda_sqrt(*this);
+	}
+	else {
+		cpu_sqrt(*this);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::multiply(const tfm::Tensor& other, bool transposeThis, bool transposeOther) const {
-	if (tfm::Device::deviceCount > 0) {
-		return cudaMatMult(*this, other, transposeThis, transposeOther);
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_mult_BLAS3(*this, other, transposeThis, transposeOther);
 	}
 	else {
-		return cpuMatMult(*this, other, transposeThis, transposeOther);
+		return cpu_mat_mult_BLAS3(*this, other, transposeThis, transposeOther);
+	}
+}
+
+tfm::Tensor tfm::Tensor::sum_along_axis(size_t axis) const {
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_add_along_axis(*this, axis);
+	}
+	else {
+		return cpu_mat_add_along_axis(*this, axis);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::operator+(const Tensor& other) const {
-	if (tfm::Device::deviceCount > 0) {
-		return cudaMatAdd(*this, other);
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_add_BLAS3(*this, other);
 	}
 	else {
-		return cpuMatAdd(*this, other);
+		return cpu_mat_add_BLAS3(*this, other);
+	}
+}
+
+
+tfm::Tensor tfm::Tensor::operator-(const Tensor& other) const {
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_sub_BLAS3(*this, other);
+	}
+	else {
+		return cpu_mat_sub_BLAS3(*this, other);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::operator*(const Tensor& other) const {
-	if (tfm::Device::deviceCount > 0) {
-		return cudaMatMult(*this, other);
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_mult_BLAS3(*this, other);
 	}
 	else {
-		return cpuMatMult(*this, other);
+		return cpu_mat_mult_BLAS3(*this, other);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::operator*(float val) const {
-	if (tfm::Device::deviceCount > 0) {
-		return cudaMatMultBLAS1(*this, val);
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_mult_BLAS1(*this, val);
 	}
 	else {
-		return cpuMatMultBLAS1(*this, val);
+		return cpu_mat_mult_BLAS1(*this, val);
 	}
 }
 
 
+tfm::Tensor tfm::Tensor::operator/(const Tensor& other) const {
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_div_BLAS3(*this, other);
+	}
+	else {
+		return cpu_mat_div_BLAS3(*this, other);
+	}
+}
+
+
+tfm::Tensor tfm::Tensor::operator/(float val) const {
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_div_BLAS1(*this, val);
+	}
+	else {
+		return cpu_mat_div_BLAS1(*this, val);
+	}
+}
