@@ -46,6 +46,9 @@
     <ClInclude Include="utils\compiler_flags.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="include\optimizer\optimizer.h">
+      <Filter>include\optimizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
@@ -101,6 +104,12 @@
     </Filter>
     <Filter Include="test\tensor">
       <UniqueIdentifier>{d13b9770-6bfa-4d78-9e4e-83efbb8ac2b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\optimizer">
+      <UniqueIdentifier>{2fb22af6-0e7f-48a6-872d-fb477aaf2138}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\optimizer">
+      <UniqueIdentifier>{673e547d-87b2-4c78-95ad-96572aaa6c3b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="src\tensor\tensor_utils.cpp">
       <Filter>src\tensor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\optimizer\optimizer.cpp">
+      <Filter>src\optimizer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
