@@ -16,10 +16,9 @@ public:
 		std::string model_name, tfm::Optimizer optimizer
 	);
 
-	const tfm::Tensor forward(const std::vector<uint32_t>& src, const std::vector<uint32_t>& tgt);
+	tfm::Tensor forward(const std::vector<uint32_t>& src, const std::vector<uint32_t>& tgt);
 	void backward(const tfm::Tensor& loss_grad);
 	void update_parameters();
-	const tfm::Tensor output() const { return output_.non_owning_copy(); }
 
 	void save() const;
 
@@ -29,7 +28,6 @@ private:
 	Embedding src_embedding_;
 	Embedding tgt_embedding_;
 	PositionalEncoding positional_encoding_;
-	tfm::Tensor output_;
 	std::string model_name_;
 	tfm::Optimizer optimizer_;
 };

@@ -9,17 +9,18 @@ namespace tfm {
 
 class Encoder {
 public:
-	Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename);
+	Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer optimizer);
 
-	const tfm::Tensor forward(const tfm::Tensor& input);
-	const tfm::Tensor output() const { return output_.non_owning_copy(); }
+	tfm::Tensor forward(const tfm::Tensor& input);
+	tfm::Tensor backward(const tfm::Tensor& grad_output);
+	void update_parameters();
 
 	void save() const;
 
 private:
 	std::vector<tfm::EncoderLayer> layers_;
-	tfm::Tensor output_;
 	std::string filename_;
+	tfm::Optimizer optimizer_;
 };
 
 }
