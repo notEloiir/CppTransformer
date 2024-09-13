@@ -8,15 +8,15 @@ namespace tfm {
 
 class MultiHeadAttention {
 public:
-	MultiHeadAttention(size_t num_heads, size_t d_model, std::string filename, tfm::Optimizer optimizer);
+	MultiHeadAttention(size_t num_heads, size_t d_model, std::string filename, tfm::Optimizer& optimizer);
 
 	tfm::Tensor forward(const tfm::Tensor& queries, const tfm::Tensor& keys, const tfm::Tensor& values);
 	tfm::Tensor backward(const tfm::Tensor& grad_output, const tfm::Tensor& input_Q, 
 		const tfm::Tensor& input_K, const tfm::Tensor& input_V);
 	void update_parameters();
-	const tfm::Tensor& get_grad_Q() { return grad_Q_total_; }
-	const tfm::Tensor& get_grad_K() { return grad_K_total_; }
-	const tfm::Tensor& get_grad_V() { return grad_V_total_; }
+	const tfm::Tensor& get_grad_Q() { return grad_Q_total_.non_owning_copy(); }
+	const tfm::Tensor& get_grad_K() { return grad_K_total_.non_owning_copy(); }
+	const tfm::Tensor& get_grad_V() { return grad_V_total_.non_owning_copy(); }
 
 	void save() const;
 
@@ -51,8 +51,16 @@ private:
 	tfm::Tensor grad_K_total_;
 	tfm::Tensor grad_V_total_;
 
+	std::unique_ptr<tfm::Optimizer> optimizer_W_q_;
+	std::unique_ptr<tfm::Optimizer> optimizer_W_k_;
+	std::unique_ptr<tfm::Optimizer> optimizer_W_v_;
+	std::unique_ptr<tfm::Optimizer> optimizer_W_o_;
+	std::unique_ptr<tfm::Optimizer> optimizer_b_q_;
+	std::unique_ptr<tfm::Optimizer> optimizer_b_k_;
+	std::unique_ptr<tfm::Optimizer> optimizer_b_v_;
+	std::unique_ptr<tfm::Optimizer> optimizer_b_o_;
+
 	std::string filename_;
-	tfm::Optimizer optimizer_;
 };
 
 }

@@ -4,15 +4,14 @@
 
 tfm::Transformer::Transformer(
 	size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, size_t vocab_size, size_t max_seq_len, 
-	std::string model_name, tfm::Optimizer optimizer
+	std::string model_name, tfm::Optimizer& optimizer
 ) :
 	encoder_(num_layers, num_heads, d_model, d_ff, (std::filesystem::path("models") / model_name / "encoder").string(), optimizer),
 	decoder_(num_layers, num_heads, d_model, d_ff, (std::filesystem::path("models") / model_name / "decoder").string(), optimizer),
 	src_embedding_(vocab_size, d_model, (std::filesystem::path("models") / model_name / "src_embedding").string(), optimizer),
 	tgt_embedding_(vocab_size, d_model, (std::filesystem::path("models") / model_name / "tgt_embedding").string(), optimizer),
 	positional_encoding_(max_seq_len, d_model),
-	model_name_(model_name),
-	optimizer_(optimizer) {}
+	model_name_(model_name) {}
 
 
 tfm::Tensor tfm::Transformer::forward(const std::vector<uint32_t>& src, const std::vector<uint32_t>& tgt) {

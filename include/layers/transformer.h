@@ -13,7 +13,7 @@ class Transformer {
 public:
 	Transformer(
 		size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, size_t vocab_size, size_t max_seq_len, 
-		std::string model_name, tfm::Optimizer optimizer
+		std::string model_name, tfm::Optimizer& optimizer
 	);
 
 	tfm::Tensor forward(const std::vector<uint32_t>& src, const std::vector<uint32_t>& tgt);
@@ -29,7 +29,6 @@ private:
 	Embedding tgt_embedding_;
 	PositionalEncoding positional_encoding_;
 	std::string model_name_;
-	tfm::Optimizer optimizer_;
 };
 
 }

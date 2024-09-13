@@ -9,7 +9,7 @@ namespace tfm {
 
 class DecoderLayer {
 public:
-	DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer optimizer);
+	DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer);
 
 	tfm::Tensor forward(const tfm::Tensor& input, const tfm::Tensor& encoder_output);
 	std::pair<tfm::Tensor, tfm::Tensor> backward(const tfm::Tensor& grad_output, const tfm::Tensor& encoder_output);
@@ -25,7 +25,6 @@ private:
 	size_t d_model_;
 	tfm::Tensor input_;
 	std::string filename_;
-	tfm::Optimizer optimizer_;
 };
 
 }

@@ -48,6 +48,7 @@ public:
 	bool has_bias() const { return bias_ != nullptr || bias_cuda_ != nullptr; }
 	bool is_vector() const { return cols() == 1; }
 	bool empty() const { return cols() == 0 || rows() == 0; }
+	std::pair<size_t, size_t> shape() { return std::make_pair(cols(), rows()); }
 
 	void init_weights();
 	void init_bias();

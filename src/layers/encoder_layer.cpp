@@ -1,12 +1,11 @@
 #include <layers/encoder_layer.h>
 
 
-tfm::EncoderLayer::EncoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer optimizer) :
+tfm::EncoderLayer::EncoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer) :
 	self_attention_(num_heads, d_model, filename + "self_attention", optimizer),
 	feed_forward_(d_model, d_ff, filename + "feed_forward", optimizer),
 	d_model_(d_model),
-	filename_(filename),
-	optimizer_(optimizer) {}
+	filename_(filename) {}
 
 
 tfm::Tensor tfm::EncoderLayer::forward(const tfm::Tensor& input) {

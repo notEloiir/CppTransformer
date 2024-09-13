@@ -11,7 +11,7 @@ namespace tfm {
 
 class Embedding {
 public:
-	Embedding(size_t vocab_size, size_t d_model, std::string filename, tfm::Optimizer optimizer);
+	Embedding(size_t vocab_size, size_t d_model, std::string filename, tfm::Optimizer& optimizer);
 
 	tfm::Tensor forward(const std::vector<uint32_t>& tokens);
 	tfm::Tensor backward(const tfm::Tensor& grad_output);
@@ -23,10 +23,10 @@ private:
 	size_t vocab_size_;
 	size_t d_model_;
 	tfm::Tensor embedding_matrix_;
-	tfm::Tensor grad_;
+	tfm::Tensor grad_embedding_matrix_;
 	std::vector<size_t> input_token_indices_;
 	std::string filename_;
-	tfm::Optimizer optimizer_;
+	std::unique_ptr<tfm::Optimizer> optimizer_embedding_matrix_;
 };
 
 }

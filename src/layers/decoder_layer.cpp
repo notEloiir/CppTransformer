@@ -1,13 +1,12 @@
 #include <layers/decoder_layer.h>
 
 
-tfm::DecoderLayer::DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer optimizer) :
+tfm::DecoderLayer::DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer) :
 	self_attention_(num_heads, d_model, filename + "self_attention", optimizer),
 	encoder_decoder_attention_(num_heads, d_model, filename + "encoder_decoder_attention", optimizer),
 	feed_forward_(d_model, d_ff, filename + "feed_forward", optimizer),
 	d_model_(d_model),
-	filename_(filename), 
-	optimizer_(optimizer) {}
+	filename_(filename) {}
 
 
 tfm::Tensor tfm::DecoderLayer::forward(const tfm::Tensor& input, const tfm::Tensor& encoder_output) {

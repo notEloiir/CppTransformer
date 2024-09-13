@@ -1,8 +1,7 @@
 #include <layers/feed_forward.h>
-#include <compiler_flags.h>
 
 
-tfm::FeedForward::FeedForward(size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer optimizer) :
+tfm::FeedForward::FeedForward(size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer) :
 	d_model_(d_model),
 	d_ff_(d_ff),
 	W_0_(d_model, d_ff, tfm::Device(tfm::DeviceType::CPU)),
@@ -13,8 +12,11 @@ tfm::FeedForward::FeedForward(size_t d_model, size_t d_ff, std::string filename,
 	grad_W_1_(d_ff, d_model, tfm::Device(tfm::DeviceType::CPU)),
 	grad_b_0_(1, d_ff, tfm::Device(tfm::DeviceType::CPU)),
 	grad_b_1_(1, d_model, tfm::Device(tfm::DeviceType::CPU)),
-	filename_(filename),
-	optimizer_(optimizer) {
+	optimizer_W_0_(optimizer.bind(W_0_, grad_W_0_)),
+	optimizer_W_1_(optimizer.bind(W_1_, grad_W_1_)),
+	optimizer_b_0_(optimizer.bind(b_0_, grad_b_0_)),
+	optimizer_b_1_(optimizer.bind(b_1_, grad_b_1_)),
+	filename_(filename) {
 
 	// try to load file, if doesn't exist, generate random matrix
 	if (1 == W_0_.load_from_path(filename + "W_0_")) {
@@ -71,21 +73,10 @@ tfm::Tensor tfm::FeedForward::backward(const tfm::Tensor& grad_output) {
 
 
 void tfm::FeedForward::update_parameters() {
-	optimizer_.forward(W_0_, grad_W_0_);
-	optimizer_.forward(W_1_, grad_W_1_);
-	optimizer_.forward(b_0_, grad_b_0_);
-	optimizer_.forward(b_1_, grad_b_1_);
-
-#ifdef SAVE_VRAM
-	grad_W_0_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_W_1_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_b_0_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_b_1_.move_to(tfm::Device(tfm::DeviceType::CPU));
-#endif // SAVE_VRAM
-	grad_W_0_.fill(0.0f);
-	grad_W_1_.fill(0.0f);
-	grad_b_0_.fill(0.0f);
-	grad_b_1_.fill(0.0f);
+	optimizer_W_0_->forward();
+	optimizer_W_1_->forward();
+	optimizer_b_0_->forward();
+	optimizer_b_1_->forward();
 }
 
 

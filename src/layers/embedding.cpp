@@ -4,22 +4,21 @@
 #include <cstdlib>
 
 #include <layers/embedding.h>
-#include <compiler_flags.h>
 
 
-tfm::Embedding::Embedding(size_t vocab_size, size_t d_model, std::string filename, tfm::Optimizer optimizer) :
+tfm::Embedding::Embedding(size_t vocab_size, size_t d_model, std::string filename, tfm::Optimizer& optimizer) :
 	vocab_size_(vocab_size), 
 	d_model_(d_model),
 	embedding_matrix_(vocab_size, d_model, tfm::Device(tfm::DeviceType::CPU)),
-	grad_(vocab_size, d_model, tfm::Device(tfm::DeviceType::CPU)),
+	grad_embedding_matrix_(vocab_size, d_model, tfm::Device(tfm::DeviceType::CPU)),
 	filename_(filename), 
-	optimizer_(optimizer) {
+	optimizer_embedding_matrix_(optimizer.bind(embedding_matrix_, grad_embedding_matrix_)) {
 
 	if (1 == embedding_matrix_.load_from_path(filename + "embedding_matrix_")) {
 		// if file doesn't exist, generate random matrix
 		embedding_matrix_.random();
 	}
-	grad_.fill(0.0f);
+	grad_embedding_matrix_.fill(0.0f);
 }
 
 
@@ -39,20 +38,15 @@ tfm::Tensor tfm::Embedding::forward(const std::vector<uint32_t>& tokens) {
 tfm::Tensor tfm::Embedding::backward(const tfm::Tensor& grad_output) {
 	for (size_t i = 0; i < input_token_indices_.size(); ++i) {
 		float* grad_token = grad_output.col_data(i);
-		grad_.add_to_col(input_token_indices_[i], grad_token);
+		grad_embedding_matrix_.add_to_col(input_token_indices_[i], grad_token);
 	}
 
-	return grad_;
+	return grad_embedding_matrix_;
 }
 
 
 void tfm::Embedding::update_parameters() {
-	optimizer_.forward(embedding_matrix_, grad_);
-
-#ifdef SAVE_VRAM
-	grad_.move_to(tfm::Device(tfm::DeviceType::CPU));
-#endif // SAVE_VRAM
-	grad_.fill(0.0f);
+	optimizer_embedding_matrix_->forward();
 }
 
 

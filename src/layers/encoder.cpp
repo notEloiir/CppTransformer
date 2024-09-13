@@ -2,9 +2,8 @@
 #include <string>
 
 
-tfm::Encoder::Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer optimizer) :
-	filename_(filename),
-	optimizer_(optimizer) {
+tfm::Encoder::Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer) :
+	filename_(filename) {
 
 	for (size_t i = 0; i < num_layers; ++i) {
 		layers_.emplace_back(num_heads, d_model, d_ff, filename + "layer" + std::to_string(i), optimizer);

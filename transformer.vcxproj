@@ -103,7 +103,10 @@
     <ClInclude Include="include\layers\multi_head_attention.h" />
     <ClInclude Include="include\layers\positional_encoding.h" />
     <ClInclude Include="include\layers\transformer.h" />
+    <ClInclude Include="include\optimizer\ADAM.h" />
     <ClInclude Include="include\optimizer\optimizer.h" />
+    <ClInclude Include="include\optimizer\SGD.h" />
+    <ClInclude Include="include\optimizer\SGD_with_momentum.h" />
     <ClInclude Include="include\tensor\device.h" />
     <ClInclude Include="include\tensor\tensor.h" />
     <ClInclude Include="utils\compiler_flags.h" />
@@ -120,7 +123,10 @@
     <ClCompile Include="src\layers\multi_head_attention.cpp" />
     <ClCompile Include="src\layers\positional_encoding.cpp" />
     <ClCompile Include="src\layers\transformer.cpp" />
+    <ClCompile Include="src\optimizer\ADAM.cpp" />
     <ClCompile Include="src\optimizer\optimizer.cpp" />
+    <ClCompile Include="src\optimizer\SGD.cpp" />
+    <ClCompile Include="src\optimizer\SGD_with_momentum.cpp" />
     <ClCompile Include="src\tensor\device.cpp" />
     <ClCompile Include="src\tensor\tensor_math.cpp" />
     <ClCompile Include="src\tensor\tensor_data.cpp" />

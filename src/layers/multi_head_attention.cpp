@@ -2,7 +2,7 @@
 #include <compiler_flags.h>
 
 
-tfm::MultiHeadAttention::MultiHeadAttention(size_t num_heads, size_t d_model, std::string filename, tfm::Optimizer optimizer) :
+tfm::MultiHeadAttention::MultiHeadAttention(size_t num_heads, size_t d_model, std::string filename, tfm::Optimizer& optimizer) :
 	num_heads_(num_heads),
 	d_model_(d_model),
 	d_key_(d_model / num_heads),
@@ -22,8 +22,15 @@ tfm::MultiHeadAttention::MultiHeadAttention(size_t num_heads, size_t d_model, st
 	grad_b_k_(1, d_model, tfm::Device(tfm::DeviceType::CPU)),
 	grad_b_v_(1, d_model, tfm::Device(tfm::DeviceType::CPU)),
 	grad_b_o_(1, d_model, tfm::Device(tfm::DeviceType::CPU)),
-	filename_ (filename),
-	optimizer_(optimizer) {
+	optimizer_W_q_(optimizer.bind(W_q_, grad_W_q_)),
+	optimizer_W_k_(optimizer.bind(W_k_, grad_W_k_)),
+	optimizer_W_v_(optimizer.bind(W_v_, grad_W_v_)),
+	optimizer_W_o_(optimizer.bind(W_o_, grad_W_o_)),
+	optimizer_b_q_(optimizer.bind(b_q_, grad_b_q_)),
+	optimizer_b_k_(optimizer.bind(b_k_, grad_b_k_)),
+	optimizer_b_v_(optimizer.bind(b_v_, grad_b_v_)),
+	optimizer_b_o_(optimizer.bind(b_o_, grad_b_o_)),
+	filename_ (filename) {
 	
 	// try to load file, if doesn't exist, generate random matrix
 	if (1 == W_q_.load_from_path(filename + "W_q_")) {
@@ -143,7 +150,7 @@ tfm::Tensor tfm::MultiHeadAttention::backward(
 	grad_b_v_ += grad_V_total_.sum_along_axis(0);
 	
 	// Return grad for Q, others available through get_grad_K() etc
-	return grad_Q_total_;
+	return grad_Q_total_.non_owning_copy();
 }
 
 
@@ -180,35 +187,14 @@ std::tuple<tfm::Tensor, tfm::Tensor, tfm::Tensor> tfm::MultiHeadAttention::atten
 
 void tfm::MultiHeadAttention::update_parameters() {
 	// Pass through optimizer
-	optimizer_.forward(W_q_, grad_W_q_);
-	optimizer_.forward(W_k_, grad_W_k_);
-	optimizer_.forward(W_v_, grad_W_v_);
-	optimizer_.forward(W_o_, grad_W_o_);
-	optimizer_.forward(b_q_, grad_b_q_);
-	optimizer_.forward(b_k_, grad_b_k_);
-	optimizer_.forward(b_v_, grad_b_v_);
-	optimizer_.forward(b_o_, grad_b_o_);
-
-#ifdef SAVE_VRAM
-	grad_W_q_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_W_k_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_W_v_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_W_o_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_b_q_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_b_k_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_b_v_.move_to(tfm::Device(tfm::DeviceType::CPU));
-	grad_b_o_.move_to(tfm::Device(tfm::DeviceType::CPU));
-#endif // SAVE_VRAM
-
-	// Clear out gradient data
-	grad_W_q_.fill(0.0f);
-	grad_W_k_.fill(0.0f);
-	grad_W_v_.fill(0.0f);
-	grad_W_o_.fill(0.0f);
-	grad_b_q_.fill(0.0f);
-	grad_b_k_.fill(0.0f);
-	grad_b_v_.fill(0.0f);
-	grad_b_o_.fill(0.0f);
+	optimizer_W_q_->forward();
+	optimizer_W_k_->forward();
+	optimizer_W_v_->forward();
+	optimizer_W_o_->forward();
+	optimizer_b_q_->forward();
+	optimizer_b_k_->forward();
+	optimizer_b_v_->forward();
+	optimizer_b_o_->forward();
 }
 
 
