@@ -128,6 +128,13 @@ __global__ void cuda_mat_mult_BLAS1_kernel(const float* a, float val, float* res
 	}
 }
 
+
+tfm::Tensor cuda_mat_mult_elementwise(const tfm::Tensor& A, const tfm::Tensor& B) {
+	// TODO: implement
+	return tfm::Tensor();
+}
+
+
 tfm::Tensor cuda_mat_mult_BLAS1(const tfm::Tensor& A, float val) {
 
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
@@ -155,7 +162,7 @@ tfm::Tensor cuda_mat_mult_BLAS1(const tfm::Tensor& A, float val) {
 }
 
 
-tfm::Tensor cuda_mat_div_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
+tfm::Tensor cuda_mat_div_elementwise(const tfm::Tensor& A, const tfm::Tensor& B) {
 	// TODO: implement
 	return tfm::Tensor();
 }

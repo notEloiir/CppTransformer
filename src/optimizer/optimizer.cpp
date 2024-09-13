@@ -77,6 +77,6 @@ void tfm::Optimizer::ADAM_forward(tfm::Tensor& param, tfm::Tensor& gradient) {
 	moment1DashedSqrt.sqrt();
 	tfm::Tensor eps(1, moment_1_.rows(), moment_1_.device());
 	eps.fill(FLT_EPSILON);
-	param = param - ((moment0Dashed / (moment1DashedSqrt + eps)) * lr_);
+	param = param - ((moment0Dashed.divide_elementwise(moment1DashedSqrt + eps)) * lr_);
 }
 

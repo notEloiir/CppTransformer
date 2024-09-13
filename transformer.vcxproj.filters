@@ -179,4 +179,7 @@
       <Filter>src\backend\cuda</Filter>
     </CudaCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
 </Project>

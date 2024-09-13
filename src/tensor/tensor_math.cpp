@@ -70,6 +70,13 @@ void tfm::Tensor::ReLU_derivative() {
 }
 
 
+tfm::Tensor tfm::Tensor::multiply_elementwise_ReLU_derivative(const tfm::Tensor& other) const {
+	tfm::Tensor other_ReLU_derivative(other);
+	other_ReLU_derivative.ReLU_derivative();
+	return this->multiply_elementwise(other_ReLU_derivative);
+}
+
+
 void tfm::Tensor::softmax() {
 	if (tfm::Device::device_count > 0) {
 		cuda_softmax(*this);
@@ -108,6 +115,27 @@ tfm::Tensor tfm::Tensor::multiply(const tfm::Tensor& other, bool transposeThis, 
 		return cpu_mat_mult_BLAS3(*this, other, transposeThis, transposeOther);
 	}
 }
+
+
+tfm::Tensor tfm::Tensor::multiply_elementwise(const Tensor& other) const {
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_mult_elementwise(*this, other);
+	}
+	else {
+		return cpu_mat_mult_elementwise(*this, other);
+	}
+}
+
+
+tfm::Tensor tfm::Tensor::divide_elementwise(const Tensor& other) const {
+	if (tfm::Device::device_count > 0) {
+		return cuda_mat_div_elementwise(*this, other);
+	}
+	else {
+		return cpu_mat_div_elementwise(*this, other);
+	}
+}
+
 
 tfm::Tensor tfm::Tensor::sum_along_axis(size_t axis) const {
 	if (tfm::Device::device_count > 0) {
@@ -155,16 +183,6 @@ tfm::Tensor tfm::Tensor::operator*(float val) const {
 	}
 	else {
 		return cpu_mat_mult_BLAS1(*this, val);
-	}
-}
-
-
-tfm::Tensor tfm::Tensor::operator/(const Tensor& other) const {
-	if (tfm::Device::device_count > 0) {
-		return cuda_mat_div_BLAS3(*this, other);
-	}
-	else {
-		return cpu_mat_div_BLAS3(*this, other);
 	}
 }
 

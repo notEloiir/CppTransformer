@@ -47,6 +47,7 @@ public:
 	bool has_weights() const { return weights_ != nullptr || weights_cuda_ != nullptr; }
 	bool has_bias() const { return bias_ != nullptr || bias_cuda_ != nullptr; }
 	bool is_vector() const { return cols() == 1; }
+	bool empty() const { return cols() == 0 || rows() == 0; }
 
 	void init_weights();
 	void init_bias();
@@ -57,21 +58,26 @@ public:
 
 	void fill(float val);
 	void random();
-	// Normalize Tensor in-place
 	void normalize();
+	void normalize_backward();
 	void ReLU();
 	void ReLU_derivative();
+	Tensor multiply_elementwise_ReLU_derivative(const Tensor& other) const;
 	void softmax();
+	void softmax_backward(const tfm::Tensor& grad);
 	void sq();  // element-wise
 	void sqrt();  // element-wise
+	void add_to_col(size_t col_id, float* data);
 	Tensor multiply(const Tensor& other, bool transpose_this, bool transpose_other) const;
+	Tensor multiply_elementwise(const Tensor& other) const;
+	Tensor divide_elementwise(const Tensor& other) const;
 	Tensor sum_along_axis(size_t axis = 0) const;
 
 	Tensor operator+(const Tensor& other) const;
+	Tensor operator+=(const Tensor& other) { *this = *this + other; return *this; }
 	Tensor operator-(const Tensor& other) const;
 	Tensor operator*(const Tensor& other) const;
 	Tensor operator*(float val) const;
-	Tensor operator/(const Tensor& other) const;  // element-wise
 	Tensor operator/(float val) const;
 	float* operator[](size_t col) { return col_data(col); }
 	const float* operator[](size_t col) const { return col_data(col); }

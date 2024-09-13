@@ -140,6 +140,25 @@ tfm::Tensor cpu_mat_mult_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B, bool 
 }
 
 
+tfm::Tensor cpu_mat_mult_elementwise(const tfm::Tensor& A, const tfm::Tensor& B) {
+	size_t cols = A.cols() < B.cols() ? A.cols() : B.cols();
+	size_t rows = A.rows() < B.rows() ? A.rows() : B.rows();
+
+	tfm::Device device(tfm::DeviceType::CPU);
+	const_cast<tfm::Tensor&>(A).move_to(device);
+	const_cast<tfm::Tensor&>(B).move_to(device);
+	tfm::Tensor C(cols, rows, device);
+
+	for (size_t col = 0; col < cols; col++) {
+		for (size_t row = 0; row < rows; row++) {
+			C[col][row] = A[col][row] * B[col][row];
+		}
+	}
+
+	return C;
+}
+
+
 tfm::Tensor cpu_mat_mult_BLAS1(const tfm::Tensor& A, float val) {
 	tfm::Tensor res(A.cols(), A.rows(), A.device());
 
@@ -153,7 +172,7 @@ tfm::Tensor cpu_mat_mult_BLAS1(const tfm::Tensor& A, float val) {
 }
 
 
-tfm::Tensor cpu_mat_div_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
+tfm::Tensor cpu_mat_div_elementwise(const tfm::Tensor& A, const tfm::Tensor& B) {
 	tfm::Tensor res(A.cols(), A.rows(), A.device());
 
 	for (size_t col = 0; col < res.cols(); col++) {
