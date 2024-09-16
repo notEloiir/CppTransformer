@@ -36,10 +36,12 @@ tfm::Tensor tfm::Embedding::forward(const std::vector<uint32_t>& tokens) {
 
 
 tfm::Tensor tfm::Embedding::backward(const tfm::Tensor& grad_output) {
-	for (size_t i = 0; i < input_token_indices_.size(); ++i) {
-		float* grad_token = grad_output.col_data(i);
-		grad_embedding_matrix_.add_to_col(input_token_indices_[i], grad_token);
+	tfm::Tensor current_grad(grad_output.cols(), grad_output.rows(), grad_output.device());
+
+	for (size_t i = 0; i < input_token_indices_.size(); i++) {
+		current_grad.copy_col(grad_output, i, input_token_indices_[i]);
 	}
+	grad_embedding_matrix_ += current_grad;
 
 	return grad_embedding_matrix_;
 }

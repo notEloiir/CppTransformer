@@ -21,7 +21,11 @@ private:
 	MultiHeadAttention self_attention_;
 	FeedForward feed_forward_;
 	size_t d_model_;
+
 	tfm::Tensor input_;
+	tfm::Tensor self_attention_add_norm_;
+	tfm::Tensor feed_forward_add_norm_;
+
 	std::string filename_;
 };
 

@@ -62,7 +62,7 @@ public:
 	void reset();
 	void random();
 	void normalize();
-	void normalize_backward();
+	void normalize_backward(const tfm::Tensor& grad);
 	void ReLU();
 	void ReLU_derivative();
 	Tensor multiply_elementwise_ReLU_derivative(const Tensor& other) const;
@@ -70,7 +70,7 @@ public:
 	void softmax_backward(const tfm::Tensor& grad);
 	void sq();  // element-wise
 	void sqrt();  // element-wise
-	void add_to_col(size_t col_id, float* data);
+	void copy_col(const Tensor& src, size_t from_col, size_t to_col);
 	Tensor multiply(const Tensor& other, bool transpose_this, bool transpose_other) const;
 	Tensor multiply_elementwise(const Tensor& other) const;
 	Tensor divide_elementwise(const Tensor& other) const;

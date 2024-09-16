@@ -10,22 +10,21 @@ tfm::DecoderLayer::DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, s
 
 
 tfm::Tensor tfm::DecoderLayer::forward(const tfm::Tensor& input, const tfm::Tensor& encoder_output) {
-	tfm::Tensor add_norm;
 	input_ = input;
 
-	const tfm::Tensor self_attention_output = self_attention_.forward(input, input, input);
-	add_norm = self_attention_output + input;
-	add_norm.normalize();
+	self_attention_add_norm_ = self_attention_.forward(input, input, input);
+	self_attention_add_norm_ += input;
+	self_attention_add_norm_.normalize();
 
-	const tfm::Tensor encoder_decoder_attention_output = encoder_decoder_attention_.forward(add_norm, encoder_output, encoder_output);
-	add_norm = encoder_decoder_attention_output + add_norm;
-	add_norm.normalize();
+	cross_attention_add_norm_ = encoder_decoder_attention_.forward(self_attention_add_norm_, encoder_output, encoder_output);
+	cross_attention_add_norm_ += self_attention_add_norm_;
+	cross_attention_add_norm_.normalize();
 
-	const tfm::Tensor feed_forward_output = feed_forward_.forward(add_norm);
-	add_norm = feed_forward_output + add_norm;
-	add_norm.normalize();
+	feed_forward_add_norm_ = feed_forward_.forward(cross_attention_add_norm_);
+	feed_forward_add_norm_ += cross_attention_add_norm_;
+	feed_forward_add_norm_.normalize();
 
-	return add_norm;
+	return feed_forward_add_norm_;
 }
 
 
@@ -33,16 +32,16 @@ std::pair<tfm::Tensor, tfm::Tensor> tfm::DecoderLayer::backward(const tfm::Tenso
 	tfm::Tensor grad_input;
 
 	tfm::Tensor grad_feed_forward = grad_output;
-	grad_feed_forward.normalize_backward();
+	feed_forward_add_norm_.normalize_backward(grad_feed_forward);
 	tfm::Tensor grad_feed_forward_output = feed_forward_.backward(grad_feed_forward);
 	grad_input = grad_feed_forward_output + grad_feed_forward;
 
-	grad_input.normalize_backward();
+	cross_attention_add_norm_.normalize_backward(grad_input);
 	tfm::Tensor grad_encoder_decoder_attention = encoder_decoder_attention_.backward(grad_input, input_, encoder_output, encoder_output);
 	const tfm::Tensor& grad_encoder_output = encoder_decoder_attention_.get_grad_K();
 	grad_input = grad_encoder_decoder_attention + grad_input;
 
-	grad_input.normalize_backward();
+	self_attention_add_norm_.normalize_backward(grad_input);
 	tfm::Tensor grad_self_attention = self_attention_.backward(grad_input, input_, input_, input_);
 	grad_input = grad_self_attention + grad_input;
 
