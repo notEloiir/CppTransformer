@@ -58,6 +58,8 @@ public:
 	int load_from_path(const std::string& path, bool load_weights_and_bias = false);
 
 	void fill(float val);
+	// 0.0f fill, move to CPU if SAVE_VRAM compiler flag active
+	void reset();
 	void random();
 	void normalize();
 	void normalize_backward();

@@ -7,6 +7,7 @@
 namespace tfm::optimizer {
 
 class ADAM : public tfm::Optimizer {
+public:
 	// Dummy constructor holding parameters
 	ADAM(float lr = 1e-3, float beta0 = 0.9f, float beta1 = 0.999f);
 	// Proper constructor

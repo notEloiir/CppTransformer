@@ -1,6 +1,5 @@
 #include <optimizer/ADAM.h>
 
-
 tfm::optimizer::ADAM::ADAM(float lr, float beta_0, float beta_1) :
 	param_(nullptr),
 	grad_(nullptr),
@@ -22,7 +21,7 @@ tfm::optimizer::ADAM::ADAM(tfm::Tensor& param, tfm::Tensor& grad, float lr, floa
 
 
 std::unique_ptr<tfm::Optimizer> tfm::optimizer::ADAM::bind(tfm::Tensor& param, tfm::Tensor& grad) {
-	return std::make_unique<tfm::optimizer::ADAM>(new ADAM(param, grad, lr_, beta_0_, beta_1_));
+	return std::make_unique<tfm::optimizer::ADAM>(param, grad, lr_, beta_0_, beta_1_);
 }
 
 
@@ -38,5 +37,5 @@ void tfm::optimizer::ADAM::forward() {
 	eps.fill(FLT_EPSILON);
 	*param_ = *param_ - ((moment0Dashed.divide_elementwise(moment1DashedSqrt + eps)) * lr_);
 
-	clear_gradient(*grad_);
+	grad_->reset();
 }

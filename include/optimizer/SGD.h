@@ -7,6 +7,7 @@
 namespace tfm::optimizer {
 
 class SGD : public tfm::Optimizer {
+public:
 	// Dummy constructor holding parameters
 	SGD(float lr = 1e-3);
 	// Proper constructor

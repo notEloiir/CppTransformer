@@ -18,7 +18,7 @@ tfm::optimizer::SGD_with_momentum::SGD_with_momentum(tfm::Tensor& param, tfm::Te
 
 
 std::unique_ptr<tfm::Optimizer> tfm::optimizer::SGD_with_momentum::bind(tfm::Tensor& param, tfm::Tensor& grad) {
-	return std::make_unique<tfm::optimizer::SGD_with_momentum>(new SGD_with_momentum(param, grad, lr_, momentum_factor_));
+	return std::make_unique<tfm::optimizer::SGD_with_momentum>(param, grad, lr_, momentum_factor_);
 }
 
 
@@ -26,5 +26,5 @@ void tfm::optimizer::SGD_with_momentum::forward() {
 	velocity_ = (velocity_ * momentum_factor_) - (*grad_ * lr_);
 	*param_ = *param_ - velocity_;
 
-	clear_gradient(*grad_);
+	grad_->reset();
 }

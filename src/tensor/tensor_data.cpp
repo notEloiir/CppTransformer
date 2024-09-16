@@ -363,6 +363,14 @@ tfm::Tensor tfm::Tensor::non_owning_copy(size_t cols, size_t col_offset) const {
 }
 
 
+void tfm::Tensor::reset() {
+#ifdef SAVE_VRAM
+	move_to(tfm::Device(tfm::DeviceType::CPU));
+#endif // SAVE_VRAM
+	fill(0.0f);
+}
+
+
 void tfm::Tensor::init_weights() {
 	Device orig_device = device_;
 	move_to(Device(tfm::DeviceType::CPU));
