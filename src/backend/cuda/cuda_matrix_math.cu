@@ -27,7 +27,7 @@ __global__ void cuda_mat_add_BLAS3_kernel(const float *a, const float *b, float 
 }
 
 // Helper function for using CUDA to add matrices in parallel.
-tfm::Tensor cuda_mat_add_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
+tfm::Tensor cuda_mat_add(const tfm::Tensor& A, const tfm::Tensor& B) {
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
 
 	size_t cols = A.cols() < B.cols() ? A.cols() : B.cols();
@@ -64,19 +64,25 @@ tfm::Tensor cuda_mat_add_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
 }
 
 
+void cuda_mat_add_inplace(tfm::Tensor& A, const tfm::Tensor& B) {
+	// TODO: implement
+
+}
+
+
 tfm::Tensor cuda_mat_add_along_axis(const tfm::Tensor& A, size_t axis) {
 	// TODO: implement
 	return tfm::Tensor();
 }
 
 
-tfm::Tensor cuda_mat_sub_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
+tfm::Tensor cuda_mat_sub(const tfm::Tensor& A, const tfm::Tensor& B) {
 	// TODO: implement
 	return tfm::Tensor();
 }
 
 
-tfm::Tensor cuda_mat_mult_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B, bool transpose_A, bool transpose_B) {
+tfm::Tensor cuda_mat_mult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpose_A, bool transpose_B) {
 	cublasHandle_t handle;
 	check_cublas_error(cublasCreate(&handle), "Failed to create cuBLAS handle");
 	
@@ -135,7 +141,7 @@ tfm::Tensor cuda_mat_mult_elementwise(const tfm::Tensor& A, const tfm::Tensor& B
 }
 
 
-tfm::Tensor cuda_mat_mult_BLAS1(const tfm::Tensor& A, float val) {
+tfm::Tensor cuda_mat_mult(const tfm::Tensor& A, float val) {
 
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
 
@@ -168,7 +174,7 @@ tfm::Tensor cuda_mat_div_elementwise(const tfm::Tensor& A, const tfm::Tensor& B)
 }
 
 
-tfm::Tensor cuda_mat_div_BLAS1(const tfm::Tensor& A, float val) {
+tfm::Tensor cuda_mat_div(const tfm::Tensor& A, float val) {
 	// TODO: implement
 	return tfm::Tensor();
 }
@@ -245,6 +251,12 @@ void cuda_normalize_matrix(tfm::Tensor& matrix) {
 	check_cuda_error(cudaFree(mem), "cudaFree failed");
 
 	return;
+}
+
+
+void cuda_normalize_matrix_backward(tfm::Tensor& normalize_output, const tfm::Tensor& grad_output) {
+	// TODO: implement
+
 }
 
 
@@ -329,6 +341,12 @@ void cuda_softmax(tfm::Tensor& matrix) {
 	check_cuda_error(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");
 
 	return;
+}
+
+
+void cuda_softmax_backward(tfm::Tensor& softmax_output, const tfm::Tensor& grad_output) {
+	// TODO: implement
+
 }
 
 

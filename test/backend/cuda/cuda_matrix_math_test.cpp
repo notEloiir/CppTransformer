@@ -17,7 +17,7 @@ TEST_CASE("CUDA tensor addition") {
 		expected[i / expected.rows()][i % expected.rows()] = i * i + 2.0f * i - 5.0f;
 	}
 
-	tfm::Tensor res = cuda_mat_add_BLAS3(t0, t1);
+	tfm::Tensor res = cuda_mat_add(t0, t1);
 	res.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t i = 0; i < t0.cols() * t0.rows(); i++) {
@@ -35,17 +35,17 @@ TEST_CASE("CUDA tensor multiplication") {
 		t1[i % t1.cols()][i / t1.cols()] = i;
 	}
 
-	CHECK_THROWS(cuda_mat_mult_BLAS3(t0, t1, false, false));
-	CHECK_THROWS(cuda_mat_mult_BLAS3(t0, t1, false, true));
-	CHECK_NOTHROW(cuda_mat_mult_BLAS3(t0, t1, true, false));
-	CHECK_THROWS(cuda_mat_mult_BLAS3(t0, t1, true, true));
+	CHECK_THROWS(cuda_mat_mult(t0, t1, false, false));
+	CHECK_THROWS(cuda_mat_mult(t0, t1, false, true));
+	CHECK_NOTHROW(cuda_mat_mult(t0, t1, true, false));
+	CHECK_THROWS(cuda_mat_mult(t0, t1, true, true));
 
 	expected[0][0] = 20.0f;
 	expected[1][0] = 23.0f;
 	expected[2][0] = 26.0f;
 	expected[3][0] = 29.0f;
 
-	tfm::Tensor res = cuda_mat_mult_BLAS3(t0, t1, true, false);
+	tfm::Tensor res = cuda_mat_mult(t0, t1, true, false);
 	res.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	CHECK_EQ(res.cols(), expected.cols());
@@ -134,7 +134,7 @@ TEST_CASE("CUDA tensor BLAS1") {
 		t[i % t.cols()][i / t.cols()] = i;
 	}
 
-	tfm::Tensor res = cuda_mat_mult_BLAS1(t, 2.5f);
+	tfm::Tensor res = cuda_mat_mult(t, 2.5f);
 	t.move_to(tfm::Device(tfm::DeviceType::CPU));
 	res.move_to(tfm::Device(tfm::DeviceType::CPU));
 

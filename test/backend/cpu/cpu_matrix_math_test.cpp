@@ -12,7 +12,7 @@ TEST_CASE("CPU tensor addition") {
 		expected[i / expected.rows()][i % expected.rows()] = i * i + 2.0f * i - 5.0f;
 	}
 
-	tfm::Tensor res = cpu_mat_add_BLAS3(t0, t1);
+	tfm::Tensor res = cpu_mat_add(t0, t1);
 
 	for (size_t i = 0; i < t0.cols() * t0.rows(); i++) {
 		CHECK_EQ(res[i / res.rows()][i % res.rows()], expected[i / expected.rows()][i % expected.rows()]);
@@ -29,17 +29,17 @@ TEST_CASE("CPU tensor multiplication") {
 		t1[i % t1.cols()][i / t1.cols()] = i;
 	}
 
-	CHECK_THROWS(cpu_mat_mult_BLAS3(t0, t1, false, false));
-	CHECK_THROWS(cpu_mat_mult_BLAS3(t0, t1, false, true));
-	CHECK_NOTHROW(cpu_mat_mult_BLAS3(t0, t1, true, false));
-	CHECK_THROWS(cpu_mat_mult_BLAS3(t0, t1, true, true));
+	CHECK_THROWS(cpu_mat_mult(t0, t1, false, false));
+	CHECK_THROWS(cpu_mat_mult(t0, t1, false, true));
+	CHECK_NOTHROW(cpu_mat_mult(t0, t1, true, false));
+	CHECK_THROWS(cpu_mat_mult(t0, t1, true, true));
 
 	expected[0][0] = 20.0f;
 	expected[1][0] = 23.0f;
 	expected[2][0] = 26.0f;
 	expected[3][0] = 29.0f;
 
-	tfm::Tensor res = cpu_mat_mult_BLAS3(t0, t1, true, false);
+	tfm::Tensor res = cpu_mat_mult(t0, t1, true, false);
 
 	CHECK_EQ(res.cols(), expected.cols());
 	CHECK_EQ(res.rows(), expected.rows());
@@ -124,7 +124,7 @@ TEST_CASE("CPU tensor BLAS1") {
 		t[i % t.cols()][i / t.cols()] = i;
 	}
 
-	tfm::Tensor res = cpu_mat_mult_BLAS1(t, 2.5f);
+	tfm::Tensor res = cpu_mat_mult(t, 2.5f);
 
 	for (size_t i = 0; i < t.cols() * t.rows(); i++) {
 		CHECK_EQ(res[i / res.rows()][i % res.rows()], doctest::Approx(2.5f * t[i / t.rows()][i % t.rows()]));

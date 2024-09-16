@@ -14,7 +14,7 @@ inline float pow2f(float x) {
 }
 
 
-tfm::Tensor cpu_mat_add_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
+tfm::Tensor cpu_mat_add(const tfm::Tensor& A, const tfm::Tensor& B) {
 	size_t cols = A.cols() < B.cols() ? A.cols() : B.cols();
 	size_t rows = A.rows() < B.rows() ? A.rows() : B.rows();
 
@@ -23,10 +23,7 @@ tfm::Tensor cpu_mat_add_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
 		cols = A.cols();
 	}
 
-	tfm::Device device(tfm::DeviceType::CPU);
-	const_cast<tfm::Tensor&>(A).move_to(device);
-	const_cast<tfm::Tensor&>(B).move_to(device);
-	tfm::Tensor C(cols, rows, device);
+	tfm::Tensor C(cols, rows, tfm::Device(tfm::DeviceType::CPU));
 
 	if (B.is_vector()) {
 		for (size_t col = 0; col < cols; col++) {
@@ -44,6 +41,34 @@ tfm::Tensor cpu_mat_add_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
 	}
 
 	return C;
+}
+
+
+void cpu_mat_add_inplace(tfm::Tensor& A, const tfm::Tensor& B) {
+	size_t cols = A.cols() < B.cols() ? A.cols() : B.cols();
+	size_t rows = A.rows() < B.rows() ? A.rows() : B.rows();
+
+	// if B is a vector, broadcast
+	if (B.is_vector()) {
+		cols = A.cols();
+	}
+
+	if (B.is_vector()) {
+		for (size_t col = 0; col < cols; col++) {
+			for (size_t row = 0; row < rows; row++) {
+				A[col][row] += B[0][row];
+			}
+		}
+	}
+	else {
+		for (size_t col = 0; col < cols; col++) {
+			for (size_t row = 0; row < rows; row++) {
+				A[col][row] += B[col][row];
+			}
+		}
+	}
+
+	return;
 }
 
 
@@ -77,7 +102,7 @@ tfm::Tensor cpu_mat_add_along_axis(const tfm::Tensor& A, size_t axis) {
 }
 
 
-tfm::Tensor cpu_mat_sub_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
+tfm::Tensor cpu_mat_sub(const tfm::Tensor& A, const tfm::Tensor& B) {
 	size_t cols = A.cols() < B.cols() ? A.cols() : B.cols();
 	size_t rows = A.rows() < B.rows() ? A.rows() : B.rows();
 
@@ -86,10 +111,7 @@ tfm::Tensor cpu_mat_sub_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
 		cols = A.cols();
 	}
 
-	tfm::Device device(tfm::DeviceType::CPU);
-	const_cast<tfm::Tensor&>(A).move_to(device);
-	const_cast<tfm::Tensor&>(B).move_to(device);
-	tfm::Tensor C(cols, rows, device);
+	tfm::Tensor C(cols, rows, tfm::Device(tfm::DeviceType::CPU));
 
 	if (B.is_vector()) {
 		for (size_t col = 0; col < cols; col++) {
@@ -110,7 +132,7 @@ tfm::Tensor cpu_mat_sub_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B) {
 }
 
 
-tfm::Tensor cpu_mat_mult_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B, bool transpose_A, bool transpose_B) {
+tfm::Tensor cpu_mat_mult(const tfm::Tensor& A, const tfm::Tensor& B, bool transpose_A, bool transpose_B) {
 	size_t m = !transpose_A ? A.rows() : A.cols();
 	size_t n = !transpose_B ? B.cols() : B.rows();
 	size_t k = !transpose_A ? A.cols() : A.rows();
@@ -122,10 +144,7 @@ tfm::Tensor cpu_mat_mult_BLAS3(const tfm::Tensor& A, const tfm::Tensor& B, bool 
 		throw std::runtime_error(message);
 	}
 
-	tfm::Device device(tfm::DeviceType::CPU);
-	const_cast<tfm::Tensor&>(A).move_to(device);
-	const_cast<tfm::Tensor&>(B).move_to(device);
-	tfm::Tensor C(n, m, device);
+	tfm::Tensor C(n, m, tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t n_i = 0; n_i < n; n_i++) {
 		for (size_t m_i = 0; m_i < m; m_i++) {
@@ -144,10 +163,7 @@ tfm::Tensor cpu_mat_mult_elementwise(const tfm::Tensor& A, const tfm::Tensor& B)
 	size_t cols = A.cols() < B.cols() ? A.cols() : B.cols();
 	size_t rows = A.rows() < B.rows() ? A.rows() : B.rows();
 
-	tfm::Device device(tfm::DeviceType::CPU);
-	const_cast<tfm::Tensor&>(A).move_to(device);
-	const_cast<tfm::Tensor&>(B).move_to(device);
-	tfm::Tensor C(cols, rows, device);
+	tfm::Tensor C(cols, rows, tfm::Device(tfm::DeviceType::CPU));
 
 	for (size_t col = 0; col < cols; col++) {
 		for (size_t row = 0; row < rows; row++) {
@@ -159,7 +175,7 @@ tfm::Tensor cpu_mat_mult_elementwise(const tfm::Tensor& A, const tfm::Tensor& B)
 }
 
 
-tfm::Tensor cpu_mat_mult_BLAS1(const tfm::Tensor& A, float val) {
+tfm::Tensor cpu_mat_mult(const tfm::Tensor& A, float val) {
 	tfm::Tensor res(A.cols(), A.rows(), A.device());
 
 	for (size_t col = 0; col < res.cols(); col++) {
@@ -185,7 +201,7 @@ tfm::Tensor cpu_mat_div_elementwise(const tfm::Tensor& A, const tfm::Tensor& B) 
 }
 
 
-tfm::Tensor cpu_mat_div_BLAS1(const tfm::Tensor& A, float val) {
+tfm::Tensor cpu_mat_div(const tfm::Tensor& A, float val) {
 	tfm::Tensor res(A.cols(), A.rows(), A.device());
 
 	for (size_t col = 0; col < res.cols(); col++) {
@@ -199,8 +215,6 @@ tfm::Tensor cpu_mat_div_BLAS1(const tfm::Tensor& A, float val) {
 
 
 void cpu_normalize_matrix(tfm::Tensor& matrix) {
-	matrix.move_to(tfm::Device(tfm::DeviceType::CPU));
-
 	for (size_t row = 0; row < matrix.rows(); row++) {
 		float gamma = matrix.weights()[row];
 		float beta = matrix.bias()[row];
@@ -226,9 +240,66 @@ void cpu_normalize_matrix(tfm::Tensor& matrix) {
 
 }
 
-void cpu_ReLU(tfm::Tensor& matrix) {
-	matrix.move_to(tfm::Device(tfm::DeviceType::CPU));
 
+void cpu_normalize_matrix_backward(tfm::Tensor& normalize_output, const tfm::Tensor& grad_output) {
+	for (size_t row = 0; row < normalize_output.rows(); row++) {
+		// Get gamma and beta
+		float gamma = normalize_output.weights()[row];
+		float beta = normalize_output.bias()[row];
+
+		// Recalculate mean and variance
+		float mean = 0.0f;
+		float var = 0.0f;
+
+		for (size_t col = 0; col < normalize_output.cols(); col++) {
+			mean += normalize_output[col][row];
+		}
+		mean /= normalize_output.cols();
+
+		for (size_t col = 0; col < normalize_output.cols(); col++) {
+			var += pow2f(normalize_output[col][row] - mean);
+		}
+		var /= normalize_output.cols();
+		float stddev = sqrtf(var);
+
+		// Calculate gradients for gamma and beta
+		float grad_gamma = 0.0f;
+		float grad_beta = 0.0f;
+
+		for (size_t col = 0; col < normalize_output.cols(); col++) {
+			grad_gamma += grad_output[col][row] * (normalize_output[col][row] - beta) / gamma;
+			grad_beta += grad_output[col][row];
+		}
+
+		// Calculate gradients wrt normalized input
+		float grad_mean = 0.0f;
+		float grad_var = 0.0f;
+
+		for (size_t col = 0; col < normalize_output.cols(); col++) {
+			// Gradient wrt the normalized output
+			float grad_norm = grad_output[col][row] * gamma;
+
+			// Accumulate gradients wrt variance and mean
+			grad_var += grad_norm * (normalize_output[col][row] - mean) * -0.5f * powf(var + FLT_MIN, -1.5f);
+			grad_mean += grad_norm * -1.0f / stddev;
+		}
+
+		// Gradient wrt input
+		for (size_t col = 0; col < normalize_output.cols(); col++) {
+			float grad_input = (grad_output[col][row] * gamma) / stddev;
+			grad_input += grad_var * 2.0f * (normalize_output[col][row] - mean) / normalize_output.cols();
+			grad_input += grad_mean / normalize_output.cols();
+
+			normalize_output[col][row] = grad_input;
+		}
+
+		normalize_output.weights()[row] -= grad_gamma;
+		normalize_output.bias()[row] -= grad_beta;
+	}
+}
+
+
+void cpu_ReLU(tfm::Tensor& matrix) {
 	for (size_t col = 0; col < matrix.cols(); col++) {
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] = matrix[col][row] > 0 ? matrix[col][row] : 0;
@@ -238,8 +309,6 @@ void cpu_ReLU(tfm::Tensor& matrix) {
 
 
 void cpu_ReLU_derivative(tfm::Tensor& matrix) {
-	matrix.move_to(tfm::Device(tfm::DeviceType::CPU));
-
 	for (size_t col = 0; col < matrix.cols(); col++) {
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] = static_cast<float>(matrix[col][row] > 0);
@@ -272,9 +341,33 @@ void cpu_softmax(tfm::Tensor& matrix) {
 }
 
 
-void cpu_sq(tfm::Tensor& matrix) {
-	matrix.move_to(tfm::Device(tfm::DeviceType::CPU));
+void cpu_softmax_backward(tfm::Tensor& softmax_output, const tfm::Tensor& grad_output) {
+	tfm::Tensor grad_input(softmax_output.rows(), softmax_output.cols(), softmax_output.device());
+	grad_input.fill(0.0f);
 
+	for (size_t col = 0; col < softmax_output.cols(); col++) {
+		float* softmax_col = softmax_output.col_data(col);
+		float* grad_col = grad_output.col_data(col);
+
+		// Calculate the dot product of the softmax vector with the gradient vector
+		float dot_product = 0.0f;
+		for (size_t row = 0; row < softmax_output.rows(); row++) {
+			dot_product += softmax_col[row] * grad_col[row];
+		}
+
+		// Compute the gradient for each element in the column
+		for (size_t row = 0; row < softmax_output.rows(); row++) {
+			// For each element in the column, apply the softmax derivative formula:
+			// grad_input = softmax * (grad_output - (softmax * sum(grad_output)))
+			grad_input[col][row] = softmax_col[row] * (grad_col[row] - dot_product);
+		}
+	}
+
+	softmax_output = std::move(grad_input);
+}
+
+
+void cpu_sq(tfm::Tensor& matrix) {
 	for (size_t col = 0; col < matrix.cols(); col++) {
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] = pow2f(matrix[col][row]);
@@ -284,8 +377,6 @@ void cpu_sq(tfm::Tensor& matrix) {
 
 
 void cpu_sqrt(tfm::Tensor& matrix) {
-	matrix.move_to(tfm::Device(tfm::DeviceType::CPU));
-
 	for (size_t col = 0; col < matrix.cols(); col++) {
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] = sqrtf(matrix[col][row]);

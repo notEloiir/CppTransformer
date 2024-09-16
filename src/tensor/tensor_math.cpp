@@ -50,6 +50,16 @@ void tfm::Tensor::normalize() {
 }
 
 
+void tfm::Tensor::normalize_backward(const tfm::Tensor& grad) {
+	if (tfm::Device::device_count > 0) {
+		cuda_normalize_matrix_backward(*this, grad);
+	}
+	else {
+		cpu_normalize_matrix_backward(*this, grad);
+	}
+}
+
+
 void tfm::Tensor::ReLU() {
 	if (tfm::Device::device_count > 0) {
 		cuda_ReLU(*this);
@@ -87,6 +97,16 @@ void tfm::Tensor::softmax() {
 }
 
 
+void tfm::Tensor::softmax_backward(const tfm::Tensor& grad) {
+	if (tfm::Device::device_count > 0) {
+		cuda_softmax_backward(*this, grad);
+	}
+	else {
+		cpu_softmax_backward(*this, grad);
+	}
+}
+
+
 void tfm::Tensor::sq() {
 	if (tfm::Device::device_count > 0) {
 		cuda_sq(*this);
@@ -109,10 +129,10 @@ void tfm::Tensor::sqrt() {
 
 tfm::Tensor tfm::Tensor::multiply(const tfm::Tensor& other, bool transposeThis, bool transposeOther) const {
 	if (tfm::Device::device_count > 0) {
-		return cuda_mat_mult_BLAS3(*this, other, transposeThis, transposeOther);
+		return cuda_mat_mult(*this, other, transposeThis, transposeOther);
 	}
 	else {
-		return cpu_mat_mult_BLAS3(*this, other, transposeThis, transposeOther);
+		return cpu_mat_mult(*this, other, transposeThis, transposeOther);
 	}
 }
 
@@ -149,49 +169,61 @@ tfm::Tensor tfm::Tensor::sum_along_axis(size_t axis) const {
 
 tfm::Tensor tfm::Tensor::operator+(const Tensor& other) const {
 	if (tfm::Device::device_count > 0) {
-		return cuda_mat_add_BLAS3(*this, other);
+		return cuda_mat_add(*this, other);
 	}
 	else {
-		return cpu_mat_add_BLAS3(*this, other);
+		return cpu_mat_add(*this, other);
 	}
+}
+
+
+tfm::Tensor& tfm::Tensor::operator+=(const Tensor& other) {
+	if (tfm::Device::device_count > 0) {
+		cuda_mat_add_inplace(*this, other);
+	}
+	else {
+		cpu_mat_add_inplace(*this, other);
+	}
+
+	return *this;
 }
 
 
 tfm::Tensor tfm::Tensor::operator-(const Tensor& other) const {
 	if (tfm::Device::device_count > 0) {
-		return cuda_mat_sub_BLAS3(*this, other);
+		return cuda_mat_sub(*this, other);
 	}
 	else {
-		return cpu_mat_sub_BLAS3(*this, other);
+		return cpu_mat_sub(*this, other);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::operator*(const Tensor& other) const {
 	if (tfm::Device::device_count > 0) {
-		return cuda_mat_mult_BLAS3(*this, other);
+		return cuda_mat_mult(*this, other);
 	}
 	else {
-		return cpu_mat_mult_BLAS3(*this, other);
+		return cpu_mat_mult(*this, other);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::operator*(float val) const {
 	if (tfm::Device::device_count > 0) {
-		return cuda_mat_mult_BLAS1(*this, val);
+		return cuda_mat_mult(*this, val);
 	}
 	else {
-		return cpu_mat_mult_BLAS1(*this, val);
+		return cpu_mat_mult(*this, val);
 	}
 }
 
 
 tfm::Tensor tfm::Tensor::operator/(float val) const {
 	if (tfm::Device::device_count > 0) {
-		return cuda_mat_div_BLAS1(*this, val);
+		return cuda_mat_div(*this, val);
 	}
 	else {
-		return cpu_mat_div_BLAS1(*this, val);
+		return cpu_mat_div(*this, val);
 	}
 }

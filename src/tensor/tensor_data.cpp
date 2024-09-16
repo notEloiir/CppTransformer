@@ -7,6 +7,7 @@
 
 #include <tensor/tensor.h>
 #include <cuda_utils.h>
+#include <compiler_flags.h>
 
 
 tfm::Tensor::Tensor() :
@@ -486,6 +487,23 @@ void tfm::Tensor::move_to(Device new_device){
 		bias_cuda_ = new_bias_cuda;
 		device_ = new_device;
 		is_owning_cuda_ = true;
+	}
+}
+
+
+void tfm::Tensor::copy_col(const tfm::Tensor& src, size_t from_col, size_t to_col) {
+	if (from_col >= src.cols() || to_col >= cols()) {
+		throw std::invalid_argument("from_col or to_col out of range");
+	}
+	if (rows() != src.rows()) {
+		throw std::invalid_argument("size doesn't match");
+	}
+
+	if (device().is_CPU()) {
+		memcpy(col_data(to_col), src.col_data(from_col), rows() * sizeof(float));
+	}
+	else {
+		check_cuda_error(cudaMemcpy((void*)(data() + to_col * rows()), (const void*)(src.data() + from_col * rows()), rows() * sizeof(float), cudaMemcpyDeviceToDevice), "Copy failed");
 	}
 }
 

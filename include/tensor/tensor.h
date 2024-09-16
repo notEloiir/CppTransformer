@@ -77,7 +77,7 @@ public:
 	Tensor sum_along_axis(size_t axis = 0) const;
 
 	Tensor operator+(const Tensor& other) const;
-	Tensor operator+=(const Tensor& other) { *this = *this + other; return *this; }
+	Tensor& operator+=(const Tensor& other);
 	Tensor operator-(const Tensor& other) const;
 	Tensor operator*(const Tensor& other) const;
 	Tensor operator*(float val) const;
