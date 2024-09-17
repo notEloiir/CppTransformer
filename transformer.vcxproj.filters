@@ -58,6 +58,15 @@
     <ClInclude Include="include\optimizer\SGD_with_momentum.h">
       <Filter>include\optimizer</Filter>
     </ClInclude>
+    <ClInclude Include="include\backend\cpu\cpu_tensor_operations.h">
+      <Filter>include\backend\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="include\backend\cuda\cuda_tensor_operations.cuh">
+      <Filter>include\backend\cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="include\backend\cuda\cuda_tensor_data.cuh">
+      <Filter>include\backend\cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
@@ -191,9 +200,18 @@
     <ClCompile Include="src\optimizer\SGD_with_momentum.cpp">
       <Filter>src\optimizer</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\cpu\cpu_tensor_operations.cpp">
+      <Filter>src\backend\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\backend\cuda\cuda_matrix_math.cu">
+      <Filter>src\backend\cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\backend\cuda\cuda_tensor_operations.cu">
+      <Filter>src\backend\cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\backend\cuda\cuda_tensor_data.cu">
       <Filter>src\backend\cuda</Filter>
     </CudaCompile>
   </ItemGroup>

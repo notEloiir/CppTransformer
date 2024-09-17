@@ -93,7 +93,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\backend\cpu\cpu_matrix_math.h" />
+    <ClInclude Include="include\backend\cpu\cpu_tensor_operations.h" />
     <ClInclude Include="include\backend\cuda\cuda_matrix_math.cuh" />
+    <ClInclude Include="include\backend\cuda\cuda_tensor_data.cuh" />
+    <ClInclude Include="include\backend\cuda\cuda_tensor_operations.cuh" />
     <ClInclude Include="include\layers\decoder.h" />
     <ClInclude Include="include\layers\decoder_layer.h" />
     <ClInclude Include="include\layers\embedding.h" />
@@ -114,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\cpu\cpu_matrix_math.cpp" />
+    <ClCompile Include="src\backend\cpu\cpu_tensor_operations.cpp" />
     <ClCompile Include="src\layers\decoder.cpp" />
     <ClCompile Include="src\layers\decoder_layer.cpp" />
     <ClCompile Include="src\layers\embedding.cpp" />
@@ -138,6 +142,8 @@
     <ClCompile Include="utils\cuda_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="src\backend\cuda\cuda_tensor_data.cu" />
+    <CudaCompile Include="src\backend\cuda\cuda_tensor_operations.cu" />
     <CudaCompile Include="src\backend\cuda\cuda_matrix_math.cu" />
   </ItemGroup>
   <ItemGroup>

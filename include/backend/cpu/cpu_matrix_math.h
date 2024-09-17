@@ -17,11 +17,5 @@ tfm::Tensor cpu_mat_mult(const tfm::Tensor& A, const tfm::Tensor& B, bool transp
 tfm::Tensor cpu_mat_div_elementwise(const tfm::Tensor& A, const tfm::Tensor& B);
 tfm::Tensor cpu_mat_div(const tfm::Tensor& A, float val);
 
-void cpu_normalize_matrix(tfm::Tensor& matrix);
-void cpu_normalize_matrix_backward(tfm::Tensor& normalize_output, const tfm::Tensor& grad_output);
-void cpu_ReLU(tfm::Tensor& matrix);
-void cpu_ReLU_derivative(tfm::Tensor& matrix);
-void cpu_softmax(tfm::Tensor& matrix);
-void cpu_softmax_backward(tfm::Tensor& softmax_output, const tfm::Tensor& grad_output);
 void cpu_sq(tfm::Tensor& matrix);  // element-wise
 void cpu_sqrt(tfm::Tensor& matrix);  // element-wise

@@ -13,19 +13,19 @@
 
 
 void tfm::Tensor::fill(float val) {
-	tfm::Device dev = device_;
-	move_to(tfm::Device(tfm::DeviceType::CPU));
-
-	if (is_data_continuous_) {
-		std::fill(data_, data_ + cols_ * rows_, val);
+	if (device_.is_CUDA()) {
+		cuda_fill(*this, val);
 	}
-	else {
-		for (size_t col = 0; col < cols(); col++) {
-			std::fill(data_2D_[col], data_2D_[col] + rows_, val);
+	else { // device_.is_CPU()
+		if (is_data_continuous_) {
+			std::fill(data_, data_ + cols_ * rows_, val);
+		}
+		else {
+			for (size_t col = 0; col < cols(); col++) {
+				std::fill(data_2D_[col], data_2D_[col] + rows_, val);
+			}
 		}
 	}
-
-	move_to(dev);
 }
 
 
