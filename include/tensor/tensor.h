@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cuda_runtime.h>
+
 #include <tensor/device.h>
 
 
@@ -62,12 +63,12 @@ public:
 	void reset();
 	void random();
 	void normalize();
-	void normalize_backward(const tfm::Tensor& grad);
+	void normalize_backward(const tfm::Tensor& normalize_input);
 	void ReLU();
 	void ReLU_derivative();
 	Tensor multiply_elementwise_ReLU_derivative(const Tensor& other) const;
 	void softmax();
-	void softmax_backward(const tfm::Tensor& grad);
+	void softmax_backward(const tfm::Tensor& softmax_output);
 	void sq();  // element-wise
 	void sqrt();  // element-wise
 	void copy_col(const Tensor& src, size_t from_col, size_t to_col);

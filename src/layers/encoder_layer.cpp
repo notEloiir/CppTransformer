@@ -11,28 +11,30 @@ tfm::EncoderLayer::EncoderLayer(size_t num_heads, size_t d_model, size_t d_ff, s
 tfm::Tensor tfm::EncoderLayer::forward(const tfm::Tensor& input) {
 	input_ = input;
 
-	self_attention_add_norm_ = self_attention_.forward(input, input, input);
-	self_attention_add_norm_ += input;
-	self_attention_add_norm_.normalize();
+	tfm::Tensor self_attention_add_norm = self_attention_.forward(input, input, input);
+	self_attention_add_norm += input;
+	self_attention_res_ = self_attention_add_norm;  // save normalize input for backpropagation
+	self_attention_add_norm.normalize();
 
-	feed_forward_add_norm_ = feed_forward_.forward(self_attention_add_norm_);
-	feed_forward_add_norm_ += self_attention_add_norm_;
-	feed_forward_add_norm_.normalize();
+	tfm::Tensor feed_forward_add_norm = feed_forward_.forward(self_attention_add_norm);
+	feed_forward_add_norm += self_attention_add_norm;
+	feed_forward_res_ = feed_forward_add_norm;
+	feed_forward_add_norm.normalize();
 
-	return feed_forward_add_norm_;
+	return feed_forward_add_norm;
 }
 
 
 tfm::Tensor tfm::EncoderLayer::backward(const tfm::Tensor& grad_output) {
 	tfm::Tensor grad_input = grad_output;
 
-	feed_forward_add_norm_.normalize_backward(grad_input);
-	tfm::Tensor grad_feed_forward_output = feed_forward_.backward(feed_forward_add_norm_);
-	grad_input += grad_feed_forward_output;
+	grad_input.normalize_backward(feed_forward_res_);
+	// Residual gradient + grad ff
+	grad_input += feed_forward_.backward(grad_input);
 
-	self_attention_add_norm_.normalize_backward(grad_input);
-	tfm::Tensor grad_self_attention = self_attention_.backward(self_attention_add_norm_, input_, input_, input_);
-	grad_input += grad_self_attention;
+	grad_input.normalize_backward(self_attention_res_);
+	// Residual gradient + grad self attention
+	grad_input += self_attention_.backward(grad_input, input_, input_, input_);
 
 	return grad_input;
 }

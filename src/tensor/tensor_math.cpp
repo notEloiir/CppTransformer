@@ -1,12 +1,15 @@
 
+#include <cassert>
 #include <cstdlib>
 #include <cstdio>
-#include <cassert>
 #include <fstream>
 
-#include <tensor/tensor.h>
-#include <backend/cuda/cuda_matrix_math.cuh>
 #include <backend/cpu/cpu_matrix_math.h>
+#include <backend/cpu/cpu_tensor_operations.h>
+#include <backend/cuda/cuda_matrix_math.cuh>
+#include <backend/cuda/cuda_tensor_data.cuh>
+#include <backend/cuda/cuda_tensor_operations.cuh>
+#include <tensor/tensor.h>
 
 
 void tfm::Tensor::fill(float val) {
@@ -50,12 +53,12 @@ void tfm::Tensor::normalize() {
 }
 
 
-void tfm::Tensor::normalize_backward(const tfm::Tensor& grad) {
+void tfm::Tensor::normalize_backward(const tfm::Tensor& normalize_input) {
 	if (tfm::Device::device_count > 0) {
-		cuda_normalize_matrix_backward(*this, grad);
+		cuda_normalize_matrix_backward(*this, normalize_input);
 	}
 	else {
-		cpu_normalize_matrix_backward(*this, grad);
+		cpu_normalize_matrix_backward(*this, normalize_input);
 	}
 }
 
@@ -97,12 +100,12 @@ void tfm::Tensor::softmax() {
 }
 
 
-void tfm::Tensor::softmax_backward(const tfm::Tensor& grad) {
+void tfm::Tensor::softmax_backward(const tfm::Tensor& softmax_output) {
 	if (tfm::Device::device_count > 0) {
-		cuda_softmax_backward(*this, grad);
+		cuda_softmax_backward(*this, softmax_output);
 	}
 	else {
-		cpu_softmax_backward(*this, grad);
+		cpu_softmax_backward(*this, softmax_output);
 	}
 }
 

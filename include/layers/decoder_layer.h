@@ -25,9 +25,9 @@ private:
 	size_t d_model_;
 
 	tfm::Tensor input_;
-	tfm::Tensor self_attention_add_norm_;
-	tfm::Tensor cross_attention_add_norm_;
-	tfm::Tensor feed_forward_add_norm_;
+	tfm::Tensor self_attention_res_;
+	tfm::Tensor cross_attention_res_;
+	tfm::Tensor feed_forward_res_;
 
 	std::string filename_;
 };
