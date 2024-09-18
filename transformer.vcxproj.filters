@@ -203,6 +203,12 @@
     <ClCompile Include="src\backend\cpu\cpu_tensor_operations.cpp">
       <Filter>src\backend\cpu</Filter>
     </ClCompile>
+    <ClCompile Include="test\backend\cpu\cpu_tensor_operations_test.cpp">
+      <Filter>test\backend\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="test\backend\cuda\cuda_tensor_operations_test.cpp">
+      <Filter>test\backend\cuda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\backend\cuda\cuda_matrix_math.cu">

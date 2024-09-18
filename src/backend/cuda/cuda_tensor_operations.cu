@@ -307,7 +307,7 @@ void cuda_softmax_backward(tfm::Tensor& grad, const tfm::Tensor& softmax_output)
 	check_cuda_error(cudaMalloc((void**)&mem, 1 * cols * sizeof(float)), "cudaMalloc failed");
 	check_cuda_error(cudaMemset(mem, 0, 1 * cols * sizeof(float)), "cudaMemset failed");
 
-	cuda_softmax_kernel<<<gridSize, blockSize>>>(matrix.data(), mem, cols, rows);
+	cuda_softmax_backward_kernel<<<gridSize, blockSize>>>(grad.data(), softmax_output.data(), mem, cols, rows);
 
 	check_cuda_error(cudaGetLastError(), "cuda_softmax_kernel launch failed");
 	check_cuda_error(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");

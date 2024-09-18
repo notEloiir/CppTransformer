@@ -83,17 +83,18 @@ tfm::Tensor cpu_mat_add_along_axis(const tfm::Tensor& A, size_t axis) {
 	size_t rows = axis == 0 ? A.rows() : 1;
 
 	tfm::Tensor res(cols, rows, A.device());
+	res.fill(0.0f);
 
 	if (axis == 0) {
-		for (size_t col = 0; col < res.cols(); col++) {
-			for (size_t row = 0; row < res.rows(); row++) {
+		for (size_t col = 0; col < A.cols(); col++) {
+			for (size_t row = 0; row < A.rows(); row++) {
 				res[0][row] += A[col][row];
 			}
 		}
 	}
 	else {
-		for (size_t col = 0; col < res.cols(); col++) {
-			for (size_t row = 0; row < res.rows(); row++) {
+		for (size_t col = 0; col < A.cols(); col++) {
+			for (size_t row = 0; row < A.rows(); row++) {
 				res[col][0] += A[col][row];
 			}
 		}

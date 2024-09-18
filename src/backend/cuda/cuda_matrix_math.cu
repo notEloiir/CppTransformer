@@ -347,10 +347,10 @@ __global__ void cuda_sq_kernel(float* matrix, size_t cols, size_t rows) {
 	}
 }
 
-void cuda_sq(const tfm::Tensor& matrix) {
+void cuda_sq(tfm::Tensor& matrix) {
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
 
-	const_cast<tfm::Tensor&>(matrix).move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	matrix.move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
 
 	dim3 blockSize(16, 16);
 	dim3 gridSize((matrix.cols() + blockSize.x - 1) / blockSize.x, (matrix.rows() + blockSize.y - 1) / blockSize.y);
@@ -371,10 +371,10 @@ __global__ void cuda_sqrt_kernel(float* matrix, size_t cols, size_t rows) {
 	}
 }
 
-void cuda_sqrt(const tfm::Tensor& matrix) {
+void cuda_sqrt(tfm::Tensor& matrix) {
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
 
-	const_cast<tfm::Tensor&>(matrix).move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	matrix.move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
 
 	dim3 blockSize(16, 16);
 	dim3 gridSize((matrix.cols() + blockSize.x - 1) / blockSize.x, (matrix.rows() + blockSize.y - 1) / blockSize.y);
