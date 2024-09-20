@@ -11,9 +11,11 @@ inline float pow2f(float x) {
 
 void cpu_normalize_matrix(tfm::Tensor& matrix) {
 	for (size_t row = 0; row < matrix.rows(); row++) {
+		// Get gamma and beta
 		float gamma = matrix.weights()[row];
 		float beta = matrix.bias()[row];
 
+		// Calculate mean and variance
 		float mean = 0.0f;
 		float var = 0.0f;
 
@@ -28,6 +30,7 @@ void cpu_normalize_matrix(tfm::Tensor& matrix) {
 		var /= matrix.cols();
 		float stddev = sqrtf(var);
 
+		// Normalize values
 		for (size_t col = 0; col < matrix.cols(); col++) {
 			matrix[col][row] = (matrix[col][row] - mean) / stddev * gamma + beta;
 		}
@@ -114,6 +117,7 @@ void cpu_ReLU_derivative(tfm::Tensor& matrix) {
 
 void cpu_softmax(tfm::Tensor& matrix) {
 	for (size_t col = 0; col < matrix.cols(); col++) {
+		// Find max value in a col
 		float max_val = -FLT_MAX;
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			if (max_val < matrix[col][row]) {
@@ -121,12 +125,14 @@ void cpu_softmax(tfm::Tensor& matrix) {
 			}
 		}
 
+		// For each value apply exp(val - max), -max to keep numerical stability
 		float sum_exp = 0.0f;
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] = std::exp(matrix[col][row] - max_val);
 			sum_exp += matrix[col][row];
 		}
 
+		// Turn into probability
 		for (size_t row = 0; row < matrix.rows(); row++) {
 			matrix[col][row] /= sum_exp;
 		}

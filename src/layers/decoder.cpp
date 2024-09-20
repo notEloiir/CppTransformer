@@ -1,5 +1,6 @@
-#include <layers/decoder.h>
 #include <string>
+
+#include <layers/decoder.h>
 
 
 tfm::Decoder::Decoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer) :

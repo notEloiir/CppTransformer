@@ -1,5 +1,6 @@
-#include <layers/transformer.h>
 #include <filesystem>
+
+#include <layers/transformer.h>
 
 
 tfm::Transformer::Transformer(
@@ -15,12 +16,15 @@ tfm::Transformer::Transformer(
 
 
 tfm::Tensor tfm::Transformer::forward(const std::vector<uint32_t>& src, const std::vector<uint32_t>& tgt) {
+	// Get embeddings for source and target
 	const tfm::Tensor src_embeddings = src_embedding_.forward(src);
 	const tfm::Tensor tgt_embeddings = tgt_embedding_.forward(tgt);
 
+	// Pass through (add) positional encoding
 	const tfm::Tensor src_pos_embeddings = positional_encoding_.forward(src_embeddings);
 	const tfm::Tensor tgt_pos_embeddings = positional_encoding_.forward(tgt_embeddings);
 
+	// Pass through encoder and decoder
 	const tfm::Tensor encoder_output = encoder_.forward(src_pos_embeddings);
 	tfm::Tensor decoder_output = decoder_.forward(tgt_pos_embeddings, encoder_output);
 
@@ -30,9 +34,13 @@ tfm::Tensor tfm::Transformer::forward(const std::vector<uint32_t>& src, const st
 
 void tfm::Transformer::backward(const tfm::Tensor& loss_grad) {
 	tfm::Tensor decoder_grad, grad_encoder_output;
+
+	// Backward pass through decoder and encoder
 	std::tie(decoder_grad, grad_encoder_output) = decoder_.backward(loss_grad);
 	tfm::Tensor encoder_grad = encoder_.backward(grad_encoder_output);
 
+	// Positional encoding has no parameters to optimize, no backward pass
+	// Backward pass through embedding layer
 	tfm::Tensor tgt_embed_grad = tgt_embedding_.backward(decoder_grad);
 	tfm::Tensor src_embed_grad = src_embedding_.backward(encoder_grad);
 }

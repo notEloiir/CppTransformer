@@ -11,9 +11,13 @@ tfm::EncoderLayer::EncoderLayer(size_t num_heads, size_t d_model, size_t d_ff, s
 tfm::Tensor tfm::EncoderLayer::forward(const tfm::Tensor& input) {
 	input_ = input;
 
+	// Forward through self-attention
 	tfm::Tensor self_attention_add_norm = self_attention_.forward(input, input, input);
+	// Residual addition
 	self_attention_add_norm += input;
-	self_attention_res_ = self_attention_add_norm;  // save normalize input for backpropagation
+	// Save input to normalize for backpropagation
+	self_attention_res_ = self_attention_add_norm;
+	// Normalize
 	self_attention_add_norm.normalize();
 
 	tfm::Tensor feed_forward_add_norm = feed_forward_.forward(self_attention_add_norm);

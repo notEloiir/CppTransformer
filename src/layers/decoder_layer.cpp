@@ -12,9 +12,13 @@ tfm::DecoderLayer::DecoderLayer(size_t num_heads, size_t d_model, size_t d_ff, s
 tfm::Tensor tfm::DecoderLayer::forward(const tfm::Tensor& input, const tfm::Tensor& encoder_output) {
 	input_ = input;
 
+	// Forward through self-attention
 	tfm::Tensor self_attention_add_norm = self_attention_.forward(input, input, input);
+	// Residual addition
 	self_attention_add_norm += input;
-	self_attention_res_ = self_attention_add_norm;  // save normalize input for backpropagation
+	// Save input to normalize for backpropagation
+	self_attention_res_ = self_attention_add_norm;
+	// Normalize
 	self_attention_add_norm.normalize();
 
 	tfm::Tensor cross_attention_add_norm = encoder_decoder_attention_.forward(self_attention_add_norm, encoder_output, encoder_output);

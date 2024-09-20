@@ -40,7 +40,6 @@ tfm::FeedForward::FeedForward(size_t d_model, size_t d_ff, std::string filename,
 
 tfm::Tensor tfm::FeedForward::forward(const tfm::Tensor& input) {
 	input_ = input;
-	input_.move_to(tfm::Device(tfm::DeviceType::CPU));
 
 	tfm::Tensor hidden = W_0_ * input + b_0_;
 
@@ -51,22 +50,20 @@ tfm::Tensor tfm::FeedForward::forward(const tfm::Tensor& input) {
 
 
 tfm::Tensor tfm::FeedForward::backward(const tfm::Tensor& grad_output) {
+	// Recalculate
 	tfm::Tensor hidden = W_0_ * input_ + b_0_;
 	hidden.ReLU();
 
-	grad_W_1_ = grad_output.multiply(hidden, false, true);
+	grad_W_1_ = grad_output.multiply(hidden, false, true);  // grad_output * hidden^T
 	grad_b_1_ = grad_output.sum_along_axis(0);
 
+	// grad_output * W_1_^T
 	tfm::Tensor grad_hidden = grad_output.multiply(W_1_, false, true).multiply_elementwise_ReLU_derivative(hidden);
 
-	grad_W_0_ = grad_hidden.multiply(input_, false, true);
+	grad_W_0_ = grad_hidden.multiply(input_, false, true);  // grad_hidden * input^T
 	grad_b_0_ = grad_hidden.sum_along_axis(0);
 
-#ifdef SAVE_VRAM
-	input_.move_to(tfm::Device(tfm::DeviceType::CPU));
-#endif // SAVE_VRAM
-	input_.fill(0.0f);
-
+	input_.reset();
 
 	return grad_hidden;
 }

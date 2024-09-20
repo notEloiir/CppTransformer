@@ -8,6 +8,7 @@
 #include <tensor/tensor.h>
 #include <cuda_utils.h>
 #include <compiler_flags.h>
+#include <backend/cuda/cuda_tensor_data.cuh>
 
 
 tfm::Tensor::Tensor() :
@@ -365,10 +366,10 @@ tfm::Tensor tfm::Tensor::non_owning_copy(size_t cols, size_t col_offset) const {
 
 
 void tfm::Tensor::reset() {
+	fill(0.0f);
 #ifdef SAVE_VRAM
 	move_to(tfm::Device(tfm::DeviceType::CPU));
 #endif // SAVE_VRAM
-	fill(0.0f);
 }
 
 

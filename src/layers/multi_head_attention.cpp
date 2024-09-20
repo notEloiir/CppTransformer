@@ -1,5 +1,4 @@
 #include <layers/multi_head_attention.h>
-#include <compiler_flags.h>
 
 
 tfm::MultiHeadAttention::MultiHeadAttention(size_t num_heads, size_t d_model, std::string filename, tfm::Optimizer& optimizer) :
@@ -107,21 +106,18 @@ tfm::Tensor tfm::MultiHeadAttention::backward(
 	grad_b_o_ += grad_output.sum_along_axis(0);
 
 	// Clear out data and CUDA allocation (if any) from concatenated_heads_
-#ifdef SAVE_VRAM
-	concatenated_heads_.move_to(tfm::Device(tfm::DeviceType::CPU));
-#endif // SAVE_VRAM
-	concatenated_heads_.fill(0.0f);
+	concatenated_heads_.reset();
 
-	// Init grad (not in constructor because no seq_len)
+	// Init grad (not in constructor because no seq_len available)
 	if (grad_Q_total_.empty()) {
 		grad_Q_total_ = tfm::Tensor(input_Q.cols(), input_Q.rows(), tfm::Device(tfm::DeviceType::CPU));
 		grad_K_total_ = tfm::Tensor(input_K.cols(), input_K.rows(), tfm::Device(tfm::DeviceType::CPU));
 		grad_V_total_ = tfm::Tensor(input_V.cols(), input_V.rows(), tfm::Device(tfm::DeviceType::CPU));
 	}
 	// Clear out past data
-	grad_Q_total_.fill(0.0f);
-	grad_K_total_.fill(0.0f);
-	grad_V_total_.fill(0.0f);
+	grad_Q_total_.reset();
+	grad_K_total_.reset();
+	grad_V_total_.reset();
 
 	// Backprop through attention
 	for (size_t i = 0; i < num_heads_; i++) {
@@ -150,7 +146,7 @@ tfm::Tensor tfm::MultiHeadAttention::backward(
 	grad_b_v_ += grad_V_total_.sum_along_axis(0);
 	
 	// Return grad for Q, others available through get_grad_K() etc
-	return grad_Q_total_.non_owning_copy();
+	return get_grad_Q();
 }
 
 

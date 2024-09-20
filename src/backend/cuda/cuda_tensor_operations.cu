@@ -23,6 +23,7 @@ __global__ void cuda_normalize_matrix_kernel(float* data, float* weights, float*
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
 
+	// Calculate mean and standard deviation
 	if (row < rows && col < cols) {
 		atomicAdd(&mean[row], data[col * rows + row]);
 	}
@@ -44,6 +45,7 @@ __global__ void cuda_normalize_matrix_kernel(float* data, float* weights, float*
 	}
 	__syncthreads();
 
+	// Normalize values
 	if (row < rows && col < cols) {
 		data[col * rows + row] = ((data[col * rows + row] - mean[row]) / stddev[row]) * weights[row] + bias[row];
 	}
@@ -84,6 +86,7 @@ __global__ void cuda_normalize_matrix_backward_kernel(
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
 
+	// Recalculate mean and stddev
 	if (row < rows && col < cols) {
 		atomicAdd(&mean[row], input[col * rows + row]);
 	}
@@ -103,6 +106,7 @@ __global__ void cuda_normalize_matrix_backward_kernel(
 	if (row < rows && col == 0) {
 		stddev[row] = sqrtf(stddev[row] / cols);
 
+		// Initialize grad_weights and grad_bias
 		grad_weights[row] = 0.0f;
 		grad_bias[row] = 0.0f;
 	}
@@ -131,6 +135,7 @@ __global__ void cuda_normalize_matrix_backward_kernel(
 		grad[col * rows + row] = grad_input_cell;
 	}
 
+	// Apply gradient to weights and bias
 	if (row < rows && col == 0) {
 		atomicAdd(&input_weights[row], -grad_weights[row]);
 		atomicAdd(&input_bias[row], -grad_bias[row]);
@@ -225,6 +230,7 @@ __global__ void cuda_softmax_kernel(float* data, float* allocated_mem, size_t co
 	float* max_val = allocated_mem;
 	float* sum_exp = allocated_mem + cols;
 
+	// Find max value in each column
 	if (col < cols && row == 0) {
 		max_val[col] = -FLT_MAX;
 	}
@@ -237,12 +243,14 @@ __global__ void cuda_softmax_kernel(float* data, float* allocated_mem, size_t co
 	}
 	__syncthreads();
 
+	// For each value apply exp(val - max), -max to keep numerical stability
 	if (col < cols && row < rows) {
 		data[col * rows + row] = expf(data[col * rows + row] - max_val[col]);
 		atomicAdd(&sum_exp[col], data[col * rows + row]);
 	}
 	__syncthreads();
 
+	// Turn into probability
 	if (col < cols && row < rows) {
 		data[col * rows + row] /= sum_exp[col];
 	}

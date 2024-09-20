@@ -30,12 +30,12 @@ void tfm::optimizer::ADAM::forward() {
 	grad_->sq();
 	moment_1_ = (moment_1_ * beta_1_) + (*grad_ * (1.0f - beta_1_));
 
-	tfm::Tensor moment0Dashed = (moment_0_ / (1.0f - beta_0_));
-	tfm::Tensor moment1DashedSqrt = (moment_1_ / (1.0f - beta_1_));
-	moment1DashedSqrt.sqrt();
+	tfm::Tensor moment_0_dashed = (moment_0_ / (1.0f - beta_0_));
+	tfm::Tensor moment_1_dashed_sqrt = (moment_1_ / (1.0f - beta_1_));
+	moment_1_dashed_sqrt.sqrt();
 	tfm::Tensor eps(1, moment_1_.rows(), moment_1_.device());
 	eps.fill(FLT_EPSILON);
-	*param_ = *param_ - ((moment0Dashed.divide_elementwise(moment1DashedSqrt + eps)) * lr_);
+	*param_ = *param_ - ((moment_0_dashed.divide_elementwise(moment_1_dashed_sqrt + eps)) * lr_);
 
 	grad_->reset();
 }

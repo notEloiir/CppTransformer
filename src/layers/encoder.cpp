@@ -1,5 +1,6 @@
-#include <layers/encoder.h>
 #include <string>
+
+#include <layers/encoder.h>
 
 
 tfm::Encoder::Encoder(size_t num_layers, size_t num_heads, size_t d_model, size_t d_ff, std::string filename, tfm::Optimizer& optimizer) :
