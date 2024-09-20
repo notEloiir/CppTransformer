@@ -374,8 +374,7 @@ void tfm::Tensor::reset() {
 
 
 void tfm::Tensor::init_weights() {
-	Device orig_device = device_;
-	move_to(Device(tfm::DeviceType::CPU));
+	if (has_weights) return;
 
 	if (weights_ == nullptr) {
 		weights_ = (float*)malloc(rows_ * sizeof(float));
@@ -387,13 +386,15 @@ void tfm::Tensor::init_weights() {
 
 	std::fill(weights_, weights_ + rows_, 1.0f);
 
-	move_to(orig_device);
+	if (device_.is_CUDA()) {
+		check_cuda_error(cudaMalloc((void**)&weights_cuda_, rows_ * sizeof(float)), "Failed to allocate device memory");
+		cuda_fill(weights_cuda_, 1.0f, 1, rows_);
+	}
 }
 
 
 void tfm::Tensor::init_bias() {
-	Device orig_device = device_;
-	move_to(Device(tfm::DeviceType::CPU));
+	if (has_bias) return;
 
 	if (bias_ == nullptr) {
 		bias_ = (float*)malloc(rows_ * sizeof(float));
@@ -405,7 +406,10 @@ void tfm::Tensor::init_bias() {
 
 	std::fill(bias_, bias_ + rows_, 0.0f);
 
-	move_to(orig_device);
+	if (device_.is_CUDA()) {
+		check_cuda_error(cudaMalloc((void**)&bias_cuda_, rows_ * sizeof(float)), "Failed to allocate device memory");
+		cuda_fill(bias_cuda_, 1.0f, 1, rows_);
+	}
 }
 
 

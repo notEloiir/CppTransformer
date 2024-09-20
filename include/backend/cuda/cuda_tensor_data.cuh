@@ -3,4 +3,4 @@
 #include <tensor/tensor.h>
 
 
-void cuda_fill(tfm::Tensor& matrix, float val);
+void cuda_fill(float* dev_ptr, float val, size_t cols, size_t rows);

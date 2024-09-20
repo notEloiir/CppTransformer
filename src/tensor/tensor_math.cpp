@@ -14,7 +14,7 @@
 
 void tfm::Tensor::fill(float val) {
 	if (device_.is_CUDA()) {
-		cuda_fill(*this, val);
+		cuda_fill(data_cuda_, val, cols_, rows_);
 	}
 	else { // device_.is_CPU()
 		if (is_data_continuous_) {
