@@ -9,10 +9,6 @@ TEST_CASE("Empty tensor") {
 	CHECK_EQ(empty.cols(), 0);
 	CHECK_EQ(empty.rows(), 0);
 	CHECK_EQ(empty.data(), nullptr);
-	CHECK_EQ(empty.weights(), nullptr);
-	CHECK_EQ(empty.bias(), nullptr);
-	CHECK_FALSE(empty.has_bias());
-	CHECK_FALSE(empty.has_weights());
 }
 TEST_CASE("Not empty tensor") {
 	tfm::Tensor t(2, 2, tfm::Device(tfm::DeviceType::CPU));
@@ -24,38 +20,13 @@ TEST_CASE("Not empty tensor") {
 	CHECK_EQ(t.cols(), 2);
 	CHECK_EQ(t.rows(), 2);
 	CHECK_NE(t.data(), nullptr);
-	CHECK_EQ(t.weights(), nullptr);
-	CHECK_EQ(t.bias(), nullptr);
-	CHECK_FALSE(t.has_bias());
-	CHECK_FALSE(t.has_weights());
 	CHECK_EQ(t[1][1], 3);
-}
-TEST_CASE("Weights") {
-	tfm::Tensor t(3, 2, tfm::Device(tfm::DeviceType::CPU));
-	t.init_weights();
-
-	CHECK_NE(t.weights(), nullptr);
-	CHECK_EQ(t.bias(), nullptr);
-	CHECK_FALSE(t.has_bias());
-	CHECK(t.has_weights());
-	CHECK_EQ(t.weights()[1], 1.0f);
-}
-TEST_CASE("Bias") {
-	tfm::Tensor t(3, 2, tfm::Device(tfm::DeviceType::CPU));
-	t.init_bias();
-
-	CHECK_EQ(t.weights(), nullptr);
-	CHECK_NE(t.bias(), nullptr);
-	CHECK(t.has_bias());
-	CHECK_FALSE(t.has_weights());
-	CHECK_EQ(t.bias()[1], 0.0f);
 }
 TEST_CASE("Copy constructor and assignment operator") {
 	tfm::Tensor orig(3, 2, tfm::Device(tfm::DeviceType::CPU));
 	for (size_t i = 0; i < orig.cols() * orig.rows(); i++) {
 		orig[i / orig.rows()][i % orig.rows()] = i;
 	}
-	orig.init_bias();
 	tfm::Tensor copy_constructed(orig);
 	tfm::Tensor copy_assigned = orig;
 
@@ -69,7 +40,6 @@ TEST_CASE("Swap constructor and assignment operator") {
 	for (size_t i = 0; i < orig.cols() * orig.rows(); i++) {
 		orig[i / orig.rows()][i % orig.rows()] = i;
 	}
-	orig.init_bias();
 	tfm::Tensor swap_constructed(std::move(orig));
 
 	CHECK_EQ(orig.data(), nullptr);
@@ -82,17 +52,12 @@ TEST_CASE("Swap constructor and assignment operator") {
 }
 TEST_CASE("Non owning copy") {
 	tfm::Tensor orig(3, 2, tfm::Device(tfm::DeviceType::CPU));
-	orig.init_bias();
 	tfm::Tensor another(orig.non_owning_copy());
 
 	CHECK_EQ(orig.cols(), another.cols());
 	CHECK_EQ(orig.rows(), another.rows());
 	CHECK_EQ(orig.data(), another.data());
 	CHECK_EQ(orig.col_data(1), another.col_data(1));
-	CHECK_EQ(orig.bias(), another.bias());
-	CHECK_EQ(orig.weights(), another.weights());
-	CHECK_EQ(orig.has_bias(), another.has_bias());
-	CHECK_EQ(orig.has_weights(), another.has_weights());
 
 	orig[0][0] = 4.0f;
 	orig[2][1] = 5.0f;

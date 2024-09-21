@@ -1,6 +1,7 @@
 #pragma once
 
 #include <layers/multi_head_attention.h>
+#include <layers/normalization.h>
 #include <layers/feed_forward.h>
 #include <tensor/tensor.h>
 
@@ -20,15 +21,14 @@ public:
 
 private:
 	MultiHeadAttention self_attention_;
+	Normalization self_attention_normalize_;
 	MultiHeadAttention encoder_decoder_attention_;
+	Normalization encoder_decoder_attention_normalize_;
 	FeedForward feed_forward_;
+	Normalization feed_forward_normalize_;
 	size_t d_model_;
 
 	tfm::Tensor input_;
-	tfm::Tensor self_attention_res_;
-	tfm::Tensor cross_attention_res_;
-	tfm::Tensor feed_forward_res_;
-
 	std::string filename_;
 };
 

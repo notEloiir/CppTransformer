@@ -131,6 +131,7 @@ float* tfm::Tensor::data() const {
 	}
 }
 
+
 float* tfm::Tensor::col_data(size_t col) const {
 	if (device_.is_CPU()) {
 		return data_2D_[col];
@@ -140,23 +141,6 @@ float* tfm::Tensor::col_data(size_t col) const {
 	}
 }
 
-float* tfm::Tensor::weights() const {
-	if (device_.is_CPU()) {
-		return weights_;
-	}
-	else {
-		return weights_cuda_;
-	}
-}
-
-float* tfm::Tensor::bias() const {
-	if (device_.is_CPU()) {
-		return bias_;
-	}
-	else {
-		return bias_cuda_;
-	}
-}
 
 std::ostream& tfm::operator<<(std::ostream& os, const Tensor& t) {
 	os << "Tensor size [" << t.cols() << ", " << t.rows() << "]\n";

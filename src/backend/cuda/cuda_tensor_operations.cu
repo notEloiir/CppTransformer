@@ -51,7 +51,7 @@ __global__ void cuda_normalize_matrix_kernel(float* data, float* weights, float*
 	}
 }
 
-void cuda_normalize_matrix(tfm::Tensor& matrix) {
+void cuda_normalize_matrix(tfm::Tensor& matrix, const tfm::Tensor& weights, const tfm::Tensor& bias) {
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
 
 	size_t cols = matrix.cols();
@@ -65,7 +65,7 @@ void cuda_normalize_matrix(tfm::Tensor& matrix) {
 	float* mem = nullptr;
 	check_cuda_error(cudaMalloc((void**)&mem, 2 * rows * sizeof(float)), "cudaMalloc failed");
 	check_cuda_error(cudaMemset(mem, 0, 2 * rows * sizeof(float)), "cudaMemset failed");
-	cuda_normalize_matrix_kernel<<<gridSize, blockSize>>>(matrix.data(), matrix.weights(), matrix.bias(), mem, cols, rows);
+	cuda_normalize_matrix_kernel<<<gridSize, blockSize>>>(matrix.data(), weights.data(), bias.data(), mem, cols, rows);
 
 	check_cuda_error(cudaGetLastError(), "cuda_normalize_matrix_kernel launch failed");
 	check_cuda_error(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");
@@ -73,10 +73,8 @@ void cuda_normalize_matrix(tfm::Tensor& matrix) {
 }
 
 
-__global__ void cuda_normalize_matrix_backward_kernel(
-	float* input, float* input_weights, float* input_bias,
-	float* grad, float* grad_weights, float* grad_bias,
-	float* allocated_mem, size_t cols, size_t rows) {
+__global__ void cuda_normalize_matrix_backward_kernel(const float* input, const float* weights, const float* bias, 
+	float* grad, float* grad_weights, float* grad_bias, float* allocated_mem, size_t cols, size_t rows) {
 
 	float* mean = allocated_mem;
 	float* stddev = allocated_mem + rows;
@@ -105,20 +103,16 @@ __global__ void cuda_normalize_matrix_backward_kernel(
 
 	if (row < rows && col == 0) {
 		stddev[row] = sqrtf(stddev[row] / cols);
-
-		// Initialize grad_weights and grad_bias
-		grad_weights[row] = 0.0f;
-		grad_bias[row] = 0.0f;
 	}
 	__syncthreads();
 
 	if (row < rows && col < cols) {
 		// Calculate gradients for gamma and beta
-		atomicAdd(&grad_weights[row], (grad[col * rows + row] * (input[col * rows + row] - input_bias[row]) / input_weights[row]));
+		atomicAdd(&grad_weights[row], (grad[col * rows + row] * (input[col * rows + row] - bias[row]) / weights[row]));
 		atomicAdd(&grad_bias[row], grad[col * rows + row]);
 
 		// Gradient wrt the normalized output
-		float grad_norm = grad[col * rows + row] * input_weights[row];
+		float grad_norm = grad[col * rows + row] * weights[row];
 
 		// Accumulate gradients wrt variance and mean
 		atomicAdd(&grad_var[row], (grad_norm * (input[col * rows + row] - mean[row]) * -0.5f * powf((stddev[row] * stddev[row]) + FLT_MIN, -1.5f)));
@@ -128,28 +122,28 @@ __global__ void cuda_normalize_matrix_backward_kernel(
 
 	// Gradient wrt input
 	if (row < rows && col < cols) {
-		float grad_input_cell = (grad[col * rows + row] * input_weights[row]) / stddev[row];
+		float grad_input_cell = (grad[col * rows + row] * weights[row]) / stddev[row];
 		grad_input_cell += grad_var[row] * 2.0f * (input[col * rows + row] - mean[row]) / cols;
 		grad_input_cell += grad_mean[row] / cols;
 
 		grad[col * rows + row] = grad_input_cell;
 	}
-
-	// Apply gradient to weights and bias
-	if (row < rows && col == 0) {
-		atomicAdd(&input_weights[row], -grad_weights[row]);
-		atomicAdd(&input_bias[row], -grad_bias[row]);
-	}
 }
 
-void cuda_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normalize_input) {
+void cuda_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normalize_input,
+	const tfm::Tensor& weights, const tfm::Tensor& bias, tfm::Tensor& grad_weights, tfm::Tensor& grad_bias) {
+
 	check_cuda_error(cudaSetDevice(0), "cudaSetDevice failed");
 
 	size_t cols = normalize_input.cols();
 	size_t rows = normalize_input.rows();
 
-	const_cast<tfm::Tensor &>(normalize_input).move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
 	grad.move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	const_cast<tfm::Tensor&>(normalize_input).move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	const_cast<tfm::Tensor&>(weights).move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	const_cast<tfm::Tensor&>(bias).move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	grad_weights.move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
+	grad_bias.move_to(tfm::Device(tfm::DeviceType::CUDA, 0));
 
 	dim3 blockSize(16, 16);
 	dim3 gridSize((cols + blockSize.x - 1) / blockSize.x, (rows + blockSize.y - 1) / blockSize.y);
@@ -158,10 +152,8 @@ void cuda_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normal
 	check_cuda_error(cudaMalloc((void**)&mem, 4 * rows * sizeof(float)), "cudaMalloc failed");
 	check_cuda_error(cudaMemset(mem, 0, 4 * rows * sizeof(float)), "cudaMemset failed");
 
-	cuda_normalize_matrix_backward_kernel<<<gridSize, blockSize>>>(
-		normalize_input.data(), normalize_input.weights(), normalize_input.bias(),
-		grad.data(), grad.weights(), grad.bias(),
-		mem, cols, rows);
+	cuda_normalize_matrix_backward_kernel<<<gridSize, blockSize>>>(normalize_input.data(), weights.data(), bias.data(), 
+		grad.data(), grad_weights.data(), grad_bias.data(), mem, cols, rows);
 
 	check_cuda_error(cudaGetLastError(), "cuda_normalize_matrix_kernel launch failed");
 	check_cuda_error(cudaDeviceSynchronize(), "cudaDeviceSynchronize failed");

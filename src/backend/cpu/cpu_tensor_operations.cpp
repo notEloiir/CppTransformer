@@ -9,11 +9,11 @@ inline float pow2f(float x) {
 }
 
 
-void cpu_normalize_matrix(tfm::Tensor& matrix) {
+void cpu_normalize_matrix(tfm::Tensor& matrix, const tfm::Tensor& weights, const tfm::Tensor& bias) {
 	for (size_t row = 0; row < matrix.rows(); row++) {
 		// Get gamma and beta
-		float gamma = matrix.weights()[row];
-		float beta = matrix.bias()[row];
+		float gamma = weights[0][row];
+		float beta = bias[0][row];
 
 		// Calculate mean and variance
 		float mean = 0.0f;
@@ -39,11 +39,13 @@ void cpu_normalize_matrix(tfm::Tensor& matrix) {
 }
 
 
-void cpu_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normalize_input) {
+void cpu_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normalize_input,
+	const tfm::Tensor& weights, const tfm::Tensor& bias, tfm::Tensor& grad_weights, tfm::Tensor& grad_bias) {
+
 	for (size_t row = 0; row < normalize_input.rows(); row++) {
 		// Get gamma and beta
-		float gamma = normalize_input.weights()[row];
-		float beta = normalize_input.bias()[row];
+		float gamma = weights[0][row];
+		float beta = bias[0][row];
 
 		// Recalculate mean and variance
 		float mean = 0.0f;
@@ -60,13 +62,9 @@ void cpu_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normali
 		var /= normalize_input.cols();
 		float stddev = sqrtf(var);
 
-		// Calculate gradients for gamma and beta
-		float grad_gamma = 0.0f;
-		float grad_beta = 0.0f;
-
 		for (size_t col = 0; col < normalize_input.cols(); col++) {
-			grad_gamma += grad[col][row] * (normalize_input[col][row] - beta) / gamma;
-			grad_beta += grad[col][row];
+			grad_weights[0][row] += grad[col][row] * (normalize_input[col][row] - beta) / gamma;
+			grad_bias[0][row] += grad[col][row];
 		}
 
 		// Calculate gradients wrt normalized input
@@ -90,9 +88,6 @@ void cpu_normalize_matrix_backward(tfm::Tensor& grad, const tfm::Tensor& normali
 
 			grad[col][row] = grad_input_cell;
 		}
-
-		grad.weights()[row] -= grad_gamma;
-		grad.bias()[row] -= grad_beta;
 	}
 }
 

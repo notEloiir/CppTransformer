@@ -43,22 +43,24 @@ void tfm::Tensor::random() {
 }
 
 
-void tfm::Tensor::normalize() {
+void tfm::Tensor::normalize(const tfm::Tensor& weights, const tfm::Tensor& bias) {
 	if (tfm::Device::device_count > 0) {
-		cuda_normalize_matrix(*this);
+		cuda_normalize_matrix(*this, weights, bias);
 	}
 	else {
-		cpu_normalize_matrix(*this);
+		cpu_normalize_matrix(*this, weights, bias);
 	}
 }
 
 
-void tfm::Tensor::normalize_backward(const tfm::Tensor& normalize_input) {
+void tfm::Tensor::normalize_backward(const tfm::Tensor& normalize_input, 
+	const tfm::Tensor& weights, const tfm::Tensor& bias, tfm::Tensor& grad_weights, tfm::Tensor& grad_bias) {
+
 	if (tfm::Device::device_count > 0) {
-		cuda_normalize_matrix_backward(*this, normalize_input);
+		cuda_normalize_matrix_backward(*this, normalize_input, weights, bias, grad_weights, grad_bias);
 	}
 	else {
-		cpu_normalize_matrix_backward(*this, normalize_input);
+		cpu_normalize_matrix_backward(*this, normalize_input, weights, bias, grad_weights, grad_bias);
 	}
 }
 

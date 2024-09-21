@@ -67,6 +67,9 @@
     <ClInclude Include="include\backend\cuda\cuda_tensor_data.cuh">
       <Filter>include\backend\cuda</Filter>
     </ClInclude>
+    <ClInclude Include="include\layers\normalization.h">
+      <Filter>include\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
@@ -208,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="test\backend\cuda\cuda_tensor_operations_test.cpp">
       <Filter>test\backend\cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="src\layers\normalization.cpp">
+      <Filter>src\layers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

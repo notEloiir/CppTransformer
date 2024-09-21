@@ -104,6 +104,7 @@
     <ClInclude Include="include\layers\encoder_layer.h" />
     <ClInclude Include="include\layers\feed_forward.h" />
     <ClInclude Include="include\layers\multi_head_attention.h" />
+    <ClInclude Include="include\layers\normalization.h" />
     <ClInclude Include="include\layers\positional_encoding.h" />
     <ClInclude Include="include\layers\transformer.h" />
     <ClInclude Include="include\optimizer\ADAM.h" />
@@ -125,6 +126,7 @@
     <ClCompile Include="src\layers\encoder_layer.cpp" />
     <ClCompile Include="src\layers\feed_forward.cpp" />
     <ClCompile Include="src\layers\multi_head_attention.cpp" />
+    <ClCompile Include="src\layers\normalization.cpp" />
     <ClCompile Include="src\layers\positional_encoding.cpp" />
     <ClCompile Include="src\layers\transformer.cpp" />
     <ClCompile Include="src\optimizer\ADAM.cpp" />

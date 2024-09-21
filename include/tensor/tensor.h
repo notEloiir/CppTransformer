@@ -42,17 +42,11 @@ public:
 	size_t cols() const { return cols_; }
 	float* data() const;
 	float* col_data(size_t col) const;
-	float* weights() const;
-	float* bias() const;
 	tfm::Device device() const { return device_; }
-	bool has_weights() const { return weights_ != nullptr || weights_cuda_ != nullptr; }
-	bool has_bias() const { return bias_ != nullptr || bias_cuda_ != nullptr; }
 	bool is_vector() const { return cols() == 1; }
 	bool empty() const { return cols() == 0 || rows() == 0; }
 	std::pair<size_t, size_t> shape() { return std::make_pair(cols(), rows()); }
 
-	void init_weights();
-	void init_bias();
 	// Moving will grant ownership on the new device
 	void move_to(Device new_device);
 	int save_to_path(const std::string& path) const;
@@ -62,8 +56,9 @@ public:
 	// 0.0f fill, move to CPU if SAVE_VRAM compiler flag active
 	void reset();
 	void random();
-	void normalize();
-	void normalize_backward(const tfm::Tensor& normalize_input);
+	void normalize(const tfm::Tensor& weights, const tfm::Tensor& bias);
+	void normalize_backward(const tfm::Tensor& normalize_input, const tfm::Tensor& weights, const tfm::Tensor& bias,
+		tfm::Tensor& grad_weights, tfm::Tensor& grad_bias);
 	void ReLU();
 	void ReLU_derivative();
 	Tensor multiply_elementwise_ReLU_derivative(const Tensor& other) const;
@@ -95,10 +90,6 @@ private:
 	float* data_cuda_;
 	// RAM-side data isn't always stored continuously, in particular (so far, only) for token embedding matrix - to avoid unnecessary copying
 	float** data_2D_;
-	float* weights_;
-	float* weights_cuda_;
-	float* bias_;
-	float* bias_cuda_;
 	bool is_owning_;
 	bool is_owning_cuda_;
 	bool is_data_continuous_;
