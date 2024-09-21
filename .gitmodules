@@ -1,0 +1,3 @@
+[submodule "bpe-tokenizer"]
+	path = bpe-tokenizer
+	url = https://gitlab.com/Eloiir/bpe-tokenizer
