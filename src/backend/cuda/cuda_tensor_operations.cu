@@ -200,8 +200,8 @@ __global__ void cuda_ReLU_derivative_kernel(float* data, size_t cols, size_t row
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-	if (col < cols && row < rows && data[col * rows + row] < 0) {
-		data[col * rows + row] = 0;
+	if (col < cols && row < rows) {
+		data[col * rows + row] = (float) (data[col * rows + row] > 0);
 	}
 }
 
